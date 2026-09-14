@@ -77,10 +77,8 @@
   place-items: center;
   width: 37px;
   height: 37px;
-  border: 1px solid #c5a66a;
   color: #f2c878;
   font-size: 27px;
-  box-shadow: 3px 3px 0 #c5a66a24;
 }
 .openSign {
   display: flex;

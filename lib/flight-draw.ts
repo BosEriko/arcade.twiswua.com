@@ -3,7 +3,7 @@ import {
   FLIGHT_HEIGHT,
   GATE_WIDTH,
   type Flight,
-} from "./flight";
+} from "./flight.ts";
 
 function ellipse(
   c: CanvasRenderingContext2D,
@@ -245,14 +245,31 @@ export function drawFlight(
     c.closePath();
     c.fill();
   }
-  for (let i = 0; i < Math.ceil(w / 380) + 2; i++) {
-    const x = i * 380 - ((scroll * 0.17) % 380);
-    cloud(c, x + 80, 112 + (i % 3) * 66, 0.55 + (i % 2) * 0.22, "#fff9e3b3");
-    cloud(c, x + 240, 568 + (i % 2) * 38, 0.95, "#e1edd3a0");
+  const cloudScroll = scroll * 0.17;
+  for (
+    let i = Math.floor(cloudScroll / 380) - 1;
+    i <= Math.ceil((cloudScroll + w) / 380);
+    i++
+  ) {
+    const x = i * 380 - cloudScroll;
+    const variant = ((i % 6) + 6) % 6;
+    cloud(
+      c,
+      x + 80,
+      112 + (variant % 3) * 66,
+      0.55 + (variant % 2) * 0.22,
+      "#fff9e3b3",
+    );
+    cloud(c, x + 240, 568 + (variant % 2) * 38, 0.95, "#e1edd3a0");
   }
-  for (let i = 0; i < Math.ceil(w / 290) + 2; i++) {
-    const x = i * 290 - ((scroll * 0.48) % 290);
-    const y = 538 + (i % 3) * 24;
+  const treeScroll = scroll * 0.48;
+  for (
+    let i = Math.floor(treeScroll / 290) - 1;
+    i <= Math.ceil((treeScroll + w) / 290);
+    i++
+  ) {
+    const x = i * 290 - treeScroll;
+    const y = 538 + (((i % 3) + 3) % 3) * 24;
     c.fillStyle = "#447e6d";
     c.beginPath();
     c.moveTo(x - 16, y + 110);

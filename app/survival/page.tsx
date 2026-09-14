@@ -1,10 +1,13 @@
 import Survival from "./survival";
 import BrandSwap from "./brand-swap";
+import styles from "./theme.module.css";
 
 export default function SurvivalPage() {
   return (
-    <BrandSwap>
-      <Survival />
-    </BrandSwap>
+    <div className={styles.theme}>
+      <BrandSwap>
+        <Survival />
+      </BrandSwap>
+    </div>
   );
 }
