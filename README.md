@@ -1,6 +1,6 @@
-# TwisWua Survival
+# TwisWua's Arcade
 
-A browser roguelite built with Next.js, React, TypeScript, and Canvas 2D. The game artwork is drawn in code.
+A three-game browser arcade built with Next.js, React, TypeScript, and Canvas 2D: Survival, Flight, and Dash. The game artwork is drawn in code.
 
 ## Run locally
 
@@ -12,6 +12,12 @@ npm run dev
 ```
 
 Open http://localhost:3000.
+
+## Dash
+
+Choose the third arcade cabinet or open `/runner` for a tiger endless runner inspired by Chrome's dinosaur game. Press Space, W, or ↑ to jump over cacti and logs. Hold S or ↓ to duck beneath birds; ducking in the air brings you down faster. On touchscreens, use the Jump and Duck buttons. P or Escape pauses; switching tabs also pauses automatically.
+
+The pace increases gradually, and the scenery alternates between day and night every 500 distance points. A collision ends the run. Retry starts a fresh trail; your personal best and music preference are saved locally when browser storage is available. Dash needs no backend or environment variables.
 
 ## Play
 

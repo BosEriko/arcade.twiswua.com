@@ -20,6 +20,15 @@ const games = [
     instruction: "TAP · FLY · TRY AGAIN",
     className: styles.flight,
   },
+  {
+    href: "/runner",
+    name: "Dash",
+    number: "03",
+    genre: "ENDLESS RUNNER",
+    description: "Small paws. No brakes. Chase the horizon.",
+    instruction: "JUMP · DUCK · KEEP RUNNING",
+    className: styles.dash,
+  },
 ];
 
 function PixelTiger({
@@ -66,7 +75,7 @@ function PixelDuck({ x, y }: { x: number; y: number }) {
   );
 }
 
-function GameArtwork({ flight }: { flight: boolean }) {
+function GameArtwork({ flight, dash }: { flight: boolean; dash: boolean }) {
   return (
     <svg
       viewBox="0 0 320 190"
@@ -80,7 +89,26 @@ function GameArtwork({ flight }: { flight: boolean }) {
         d="M0 0h320v18H0zM0 18h20v20H0zm40 0h20v10H40zm52 0h30v16H92zm72 0h16v11h-16zm67 0h32v18h-32zm65 0h24v24h-24Z"
         fill={flight ? "#1a4550" : "#385342"}
       />
-      {flight ? (
+      {dash ? (
+        <>
+          <path d="M0 0h320v190H0z" fill="#ebd2a0" />
+          <circle cx="259" cy="48" r="25" fill="#fff0c9" />
+          <path d="M0 146 64 67l61 72 58-49 83 58 54-38v80H0Z" fill="#b4bc92" />
+          <path d="M0 151 77 127l61 28 63-29 119 36v28H0Z" fill="#8fa17a" />
+          <path d="M0 168h320v22H0Z" fill="#4d6a4c" />
+          <path d="M0 166h320v3H0z" fill="#d0dbaa" />
+          <path
+            d="M231 117h11v51h-11zm-14 13h7v15h11v7h-18zm25 12h10v-13h6v20h-16z"
+            fill="#335c49"
+          />
+          <PixelTiger x={86} y={94} />
+          <path
+            d="M38 139h19v3H38zm-8 9h29v3H30zm16 9h13v3H46zM29 178h32v3H29zm144 5h21v3h-21z"
+            fill="#e8d7a4"
+          />
+          <path d="M146 47h58v7h-58zm14-8h30v8h-30z" fill="#fff0c9" />
+        </>
+      ) : flight ? (
         <>
           <circle cx="258" cy="53" r="27" fill="#e5d5a1" />
           <path
@@ -142,7 +170,10 @@ function GameArtwork({ flight }: { flight: boolean }) {
           />
         </>
       )}
-      <path d="M0 183h320v7H0z" fill={flight ? "#102a32" : "#1b2c25"} />
+      <path
+        d="M0 183h320v7H0z"
+        fill={dash ? "#3b543d" : flight ? "#102a32" : "#1b2c25"}
+      />
     </svg>
   );
 }
@@ -185,7 +216,7 @@ export default function Page() {
 
         <div className={styles.selectionLabel}>
           <span>↓ SELECT YOUR GAME</span>
-          <span>02 MACHINES · INFINITE CONTINUES</span>
+          <span>03 MACHINES · INFINITE CONTINUES</span>
         </div>
         <div className={styles.cabinets}>
           {games.map((game) => (
@@ -205,7 +236,10 @@ export default function Page() {
               </div>
               <div className={styles.screenHousing}>
                 <div className={styles.screen}>
-                  <GameArtwork flight={game.name === "Flight"} />
+                  <GameArtwork
+                    flight={game.name === "Flight"}
+                    dash={game.name === "Dash"}
+                  />
                   <div className={styles.screenOverlay} />
                   <span className={styles.screenPrompt}>PRESS PLAY</span>
                 </div>
