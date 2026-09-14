@@ -24,6 +24,16 @@ Open http://localhost:3000.
 - Best wave and permanent health progression are stored in this browser. No account or backend is required.
 - An original synthesized 8-bit music loop starts when you play. Toggle it with the music button. It pauses with the game and when you switch away.
 
+## TwisWua Flight
+
+Open `/flappy` from the arcade selector. Tap/click the arena, press Space or Arrow Up, or use the mobile FLAP button to gain altitude. P or Escape pauses and resumes; leaving the tab pauses automatically.
+
+- Pass a gate for one point. Collect its star for three more, then clear it cleanly to build a perfect streak worth up to five bonus points per gate.
+- Each flight starts with one shield. It absorbs a collision; shield pickups appear every sixth gate.
+- The flight speeds up and gaps narrow gradually. Earn bronze, silver, and gold wings at 5, 15, and 30 gates.
+- Retry from the result screen. Personal best and sound preference stay saved in this browser, including existing Flight records.
+- Music and sound effects start after you press play. The sound button mutes both. Mobile fits the viewport without scrolling.
+
 ## Checks
 
 ```sh

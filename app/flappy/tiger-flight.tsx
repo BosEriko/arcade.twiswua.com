@@ -2,295 +2,487 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createFlight,
+  flapFlight,
+  flightMedal,
+  FLIGHT_HEIGHT,
+  pauseFlight,
+  readFlightBest,
+  resizeFlight,
+  resumeFlight,
+  startFlight,
+  tickFlight,
+  type Flight,
+} from "../../lib/flight";
+import { drawFlight } from "../../lib/flight-draw";
+import { FlightAudio } from "../../lib/flight-audio";
 import styles from "./tiger-flight.module.css";
 
-type Tree = { x: number; gapY: number; scored: boolean };
-type Phase = "ready" | "playing" | "over";
-
-const WORLD_W = 420;
-const WORLD_H = 720;
-const TIGER_X = 92;
-const TIGER_R = 19;
-const TREE_W = 72;
-const GAP = 178;
-const SPEED = 128;
-const GRAVITY = 1050;
-const FLAP = -370;
-
-class FlightMusic {
-  private context: AudioContext | null = null;
-  private timer: number | null = null;
-  private step = 0;
-  private muted = false;
-
-  setMuted(muted: boolean) {
-    this.muted = muted;
-    if (muted) this.stop();
-  }
-
-  async play() {
-    if (this.muted || this.timer !== null) return;
-    this.context ??= new AudioContext();
-    if (this.context.state === "suspended") await this.context.resume();
-    this.step = 0;
-    this.tick();
-    this.timer = window.setInterval(() => this.tick(), 185);
-  }
-
-  stop() {
-    if (this.timer !== null) window.clearInterval(this.timer);
-    this.timer = null;
-  }
-
-  dispose() {
-    this.stop();
-    void this.context?.close();
-    this.context = null;
-  }
-
-  private tick() {
-    if (!this.context || this.muted) return;
-    const melody = [659.25, 783.99, 880, 783.99, 659.25, 523.25, 587.33, 659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33, 523.25, 587.33];
-    const bass = [164.81, 164.81, 196, 196, 146.83, 146.83, 174.61, 174.61];
-    const now = this.context.currentTime;
-
-    const lead = this.context.createOscillator();
-    const leadGain = this.context.createGain();
-    lead.type = "square";
-    lead.frequency.value = melody[this.step % melody.length];
-    leadGain.gain.setValueAtTime(0.025, now);
-    leadGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-    lead.connect(leadGain).connect(this.context.destination);
-    lead.start(now);
-    lead.stop(now + 0.15);
-
-    if (this.step % 2 === 0) {
-      const low = this.context.createOscillator();
-      const lowGain = this.context.createGain();
-      low.type = "triangle";
-      low.frequency.value = bass[Math.floor(this.step / 2) % bass.length];
-      lowGain.gain.setValueAtTime(0.035, now);
-      lowGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-      low.connect(lowGain).connect(this.context.destination);
-      low.start(now);
-      low.stop(now + 0.29);
-    }
-
-    this.step += 1;
-  }
+function snapshot(run: Flight) {
+  return {
+    phase: run.phase,
+    score: run.score,
+    gates: run.gatesPassed,
+    stars: run.stars,
+    combo: run.combo,
+    bestCombo: run.bestCombo,
+    shield: run.shield,
+    distance: Math.floor(run.distance / 10),
+    notice: run.notice,
+    noticeTime: run.noticeTime,
+  };
 }
 
 export default function TwisWuaFlight() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const phaseRef = useRef<Phase>("ready");
-  const tigerY = useRef(WORLD_H * 0.46);
-  const velocity = useRef(0);
-  const trees = useRef<Tree[]>([]);
-  const scoreRef = useRef(0);
-  const musicRef = useRef<FlightMusic | null>(null);
+  const stageRef = useRef<HTMLElement>(null);
+  const runRef = useRef(createFlight());
+  const audioRef = useRef<FlightAudio | null>(null);
+  const bestRef = useRef(0);
+  const previousBest = useRef(0);
   const mutedRef = useRef(false);
-  const [phase, setPhase] = useState<Phase>("ready");
-  const [score, setScore] = useState(0);
+  const restartAt = useRef(0);
+  const [hud, setHud] = useState(() => snapshot(runRef.current));
   const [best, setBest] = useState(0);
   const [muted, setMuted] = useState(false);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
 
-  const playMusic = useCallback(() => {
-    musicRef.current ??= new FlightMusic();
-    musicRef.current.setMuted(mutedRef.current);
-    void musicRef.current.play();
+  const playAudio = useCallback(() => {
+    audioRef.current ??= new FlightAudio();
+    audioRef.current.setMuted(mutedRef.current);
+    audioRef.current.play();
   }, []);
 
-  const reset = useCallback(() => {
-    tigerY.current = WORLD_H * 0.46;
-    velocity.current = 0;
-    trees.current = [
-      { x: 410, gapY: 245, scored: false },
-      { x: 650, gapY: 390, scored: false },
-      { x: 890, gapY: 300, scored: false },
-    ];
-    scoreRef.current = 0;
-    setScore(0);
+  const pause = useCallback(() => {
+    pauseFlight(runRef.current);
+    audioRef.current?.pause();
+    setHud(snapshot(runRef.current));
   }, []);
 
-  const flap = useCallback(() => {
-    if (phaseRef.current === "over" || phaseRef.current === "ready") {
-      reset();
-      phaseRef.current = "playing";
-      setPhase("playing");
-      playMusic();
-    }
-    velocity.current = FLAP;
-  }, [playMusic, reset]);
+  const action = useCallback(() => {
+    const current = runRef.current;
+    if (current.phase === "over" && performance.now() < restartAt.current)
+      return;
+    if (current.phase === "ready" || current.phase === "over") {
+      previousBest.current = bestRef.current;
+      runRef.current = createFlight(
+        current.width,
+        Math.floor(Math.random() * 4294967296),
+      );
+      startFlight(runRef.current);
+      playAudio();
+    } else if (current.phase === "paused") {
+      resumeFlight(current);
+      playAudio();
+    } else flapFlight(current);
+    setHud(snapshot(runRef.current));
+  }, [playAudio]);
+
+  const togglePause = useCallback(() => {
+    if (runRef.current.phase === "playing") pause();
+    else if (runRef.current.phase === "paused") action();
+  }, [action, pause]);
 
   useEffect(() => {
     try {
-      setBest(Math.max(0, Number(localStorage.getItem("tiger-flight-best") || 0)));
-      const savedMuted = localStorage.getItem("tiger-flight-muted") === "1";
-      mutedRef.current = savedMuted;
-      setMuted(savedMuted);
-    } catch {}
-    reset();
-    return () => musicRef.current?.dispose();
-  }, [reset]);
+      bestRef.current = readFlightBest(
+        localStorage.getItem("tiger-flight-best"),
+      );
+      previousBest.current = bestRef.current;
+      setBest(bestRef.current);
+      mutedRef.current = localStorage.getItem("tiger-flight-muted") === "1";
+      setMuted(mutedRef.current);
+    } catch {
+      setStorageUnavailable(true);
+    }
 
-  useEffect(() => {
-    const keydown = (event: KeyboardEvent) => {
-      if (event.code === "Space") {
-        event.preventDefault();
-        flap();
-      }
-    };
-    const visibility = () => {
-      if (document.hidden) musicRef.current?.stop();
-      else if (phaseRef.current === "playing") playMusic();
-    };
-    window.addEventListener("keydown", keydown);
-    document.addEventListener("visibilitychange", visibility);
-    return () => {
-      window.removeEventListener("keydown", keydown);
-      document.removeEventListener("visibilitychange", visibility);
-    };
-  }, [flap, playMusic]);
-
-  useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    let frame = 0;
-    let last = performance.now();
-
-    const endGame = () => {
-      if (phaseRef.current !== "playing") return;
-      phaseRef.current = "over";
-      setPhase("over");
-      musicRef.current?.stop();
-      setBest((current) => {
-        const next = Math.max(current, scoreRef.current);
-        try { localStorage.setItem("tiger-flight-best", String(next)); } catch {}
-        return next;
-      });
+    const stage = stageRef.current;
+    const c = canvas?.getContext("2d");
+    if (!canvas || !stage || !c) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let frame = 0,
+      last = 0,
+      lastHud = 0;
+    const resize = () => {
+      const rect = stage.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const width = (rect.width / rect.height) * FLIGHT_HEIGHT;
+      if (
+        Math.abs(width - runRef.current.width) > 20 &&
+        runRef.current.phase === "playing"
+      )
+        pause();
+      resizeFlight(runRef.current, width);
+      const ratio = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
     };
-
-    const drawTree = (x: number, gapY: number) => {
-      const topH = gapY - GAP / 2;
-      const bottomY = gapY + GAP / 2;
-      ctx.fillStyle = "#4c6b45";
-      ctx.fillRect(x + 23, 0, TREE_W - 46, topH);
-      ctx.fillRect(x + 23, bottomY, TREE_W - 46, WORLD_H - bottomY);
-      ctx.fillStyle = "#638454";
-      for (let y = topH - 22; y > -35; y -= 42) {
-        ctx.beginPath(); ctx.arc(x + TREE_W / 2, y, 48, 0, Math.PI * 2); ctx.fill();
-      }
-      for (let y = bottomY + 20; y < WORLD_H + 35; y += 42) {
-        ctx.beginPath(); ctx.arc(x + TREE_W / 2, y, 48, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.fillStyle = "#3d5b3d";
-      ctx.fillRect(x + 28, 0, 8, topH);
-      ctx.fillRect(x + 28, bottomY, 8, WORLD_H - bottomY);
-    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(stage);
+    resize();
 
     const render = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.035);
+      const run = runRef.current;
+      const before = run.phase;
+      tickFlight(run, last ? (now - last) / 1000 : 0);
       last = now;
-      if (phaseRef.current === "playing") {
-        velocity.current += GRAVITY * dt;
-        tigerY.current += velocity.current * dt;
-        for (const tree of trees.current) {
-          tree.x -= SPEED * dt;
-          if (!tree.scored && tree.x + TREE_W < TIGER_X) {
-            tree.scored = true;
-            scoreRef.current += 1;
-            setScore(scoreRef.current);
-          }
+      for (const event of run.events) audioRef.current?.sound(event);
+      run.events = [];
+      if (before === "playing" && run.phase === "over") {
+        restartAt.current = now + 450;
+        audioRef.current?.stopMusic();
+        bestRef.current = Math.max(bestRef.current, run.score);
+        setBest(bestRef.current);
+        try {
+          localStorage.setItem("tiger-flight-best", String(bestRef.current));
+        } catch {
+          setStorageUnavailable(true);
         }
-        const first = trees.current[0];
-        if (first && first.x + TREE_W < -10) {
-          trees.current.shift();
-          const lastTree = trees.current[trees.current.length - 1];
-          const seed = Math.sin((scoreRef.current + 3) * 12.9898) * 43758.5453;
-          const random = seed - Math.floor(seed);
-          trees.current.push({ x: lastTree.x + 240, gapY: 215 + random * 290, scored: false });
-        }
-        const hitTree = trees.current.some((tree) => {
-          const horizontal = TIGER_X + TIGER_R > tree.x + 12 && TIGER_X - TIGER_R < tree.x + TREE_W - 12;
-          const vertical = tigerY.current - TIGER_R < tree.gapY - GAP / 2 + 10 || tigerY.current + TIGER_R > tree.gapY + GAP / 2 - 10;
-          return horizontal && vertical;
-        });
-        if (tigerY.current < TIGER_R || tigerY.current > WORLD_H - TIGER_R || hitTree) endGame();
-      } else if (phaseRef.current === "ready") {
-        tigerY.current = WORLD_H * 0.46 + Math.sin(now / 300) * 7;
       }
-
-      ctx.clearRect(0, 0, WORLD_W, WORLD_H);
-      const sky = ctx.createLinearGradient(0, 0, 0, WORLD_H);
-      sky.addColorStop(0, "#dce9c4"); sky.addColorStop(0.72, "#b8cc96"); sky.addColorStop(1, "#829c67");
-      ctx.fillStyle = sky; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-      ctx.fillStyle = "#ffffff55";
-      ctx.beginPath(); ctx.arc(335, 105, 46, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#78955f55";
-      ctx.beginPath(); ctx.moveTo(0, 540); ctx.quadraticCurveTo(95, 455, 185, 540); ctx.quadraticCurveTo(310, 430, 420, 530); ctx.lineTo(420, 720); ctx.lineTo(0, 720); ctx.fill();
-      trees.current.forEach((tree) => drawTree(tree.x, tree.gapY));
-
-      ctx.save();
-      ctx.translate(TIGER_X, tigerY.current);
-      ctx.rotate(Math.max(-0.35, Math.min(0.65, velocity.current / 700)));
-      ctx.font = "44px system-ui, Apple Color Emoji, Segoe UI Emoji";
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("🐯", 0, 0);
-      ctx.restore();
-
-      ctx.fillStyle = "#293e31"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-      ctx.font = "700 48px Outfit, sans-serif"; ctx.fillText(String(scoreRef.current), WORLD_W / 2, 38);
+      c.setTransform(
+        canvas.width / run.width,
+        0,
+        0,
+        canvas.height / FLIGHT_HEIGHT,
+        0,
+        0,
+      );
+      drawFlight(c, run, now / 1000, reducedMotion.matches);
+      if (now - lastHud > 100 || before !== run.phase) {
+        setHud(snapshot(run));
+        lastHud = now;
+      }
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(frame);
-  }, []);
+    const keydown = (event: KeyboardEvent) => {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey)
+        return;
+      const interactive =
+        event.target instanceof HTMLElement &&
+        !!event.target.closest("button, a, input, select, textarea");
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        if (interactive && event.code === "Space") return;
+        event.preventDefault();
+        action();
+      } else if (event.code === "KeyP" || event.code === "Escape") {
+        event.preventDefault();
+        togglePause();
+      }
+    };
+    const hide = () => {
+      if (document.hidden) pause();
+    };
+    window.addEventListener("keydown", keydown);
+    window.addEventListener("blur", pause);
+    document.addEventListener("visibilitychange", hide);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("keydown", keydown);
+      window.removeEventListener("blur", pause);
+      document.removeEventListener("visibilitychange", hide);
+      audioRef.current?.dispose();
+      audioRef.current = null;
+    };
+  }, [action, pause, togglePause]);
 
   const toggleMusic = () => {
     mutedRef.current = !mutedRef.current;
     setMuted(mutedRef.current);
-    musicRef.current ??= new FlightMusic();
-    musicRef.current.setMuted(mutedRef.current);
-    try { localStorage.setItem("tiger-flight-muted", mutedRef.current ? "1" : "0"); } catch {}
-    if (!mutedRef.current && phaseRef.current === "playing") playMusic();
+    audioRef.current?.setMuted(mutedRef.current);
+    if (!mutedRef.current && runRef.current.phase === "playing") playAudio();
+    try {
+      localStorage.setItem("tiger-flight-muted", mutedRef.current ? "1" : "0");
+    } catch {
+      setStorageUnavailable(true);
+    }
   };
+  const playing = hud.phase === "playing";
+  const over = hud.phase === "over";
+  const ready = hud.phase === "ready";
+  const milestone = hud.gates < 5 ? 5 : hud.gates < 15 ? 15 : 30;
+  const isRecord = over && hud.score > previousBest.current;
 
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
-        <Link href="/" className={styles.back}>← Arcade</Link>
-        <strong><span>虎</span> TWISWUA <i>FLIGHT</i></strong>
+        <Link href="/" className={styles.back} aria-label="Back to the arcade">
+          <span aria-hidden="true">←</span> <span>ARCADE ROOM</span>
+        </Link>
+        <div className={styles.brand}>
+          <span aria-hidden="true">🐯</span>
+          <div>
+            TWISWUA <strong>FLIGHT</strong>
+            <small>THE SKY IS NOT THE LIMIT.</small>
+          </div>
+        </div>
         <div className={styles.headerRight}>
-          <button className={styles.music} onClick={toggleMusic} aria-label={muted ? "Turn music on" : "Turn music off"} aria-pressed={!muted}>
-            ♫ {muted ? "OFF" : "ON"}
+          <button
+            className={styles.iconButton}
+            onClick={toggleMusic}
+            aria-label={muted ? "Turn sound on" : "Mute sound"}
+            aria-pressed={!muted}
+          >
+            <span aria-hidden="true">{muted ? "♪" : "♫"}</span>
+            <span className={styles.soundLabel}>{muted ? "OFF" : "ON"}</span>
           </button>
-          <span className={styles.best}>BEST {best}</span>
+          <button
+            className={styles.iconButton}
+            onClick={togglePause}
+            disabled={ready || over}
+            aria-label={
+              hud.phase === "paused" ? "Resume flight" : "Pause flight"
+            }
+          >
+            <span aria-hidden="true">{hud.phase === "paused" ? "▷" : "Ⅱ"}</span>
+          </button>
         </div>
       </header>
-      <section className={styles.game} aria-label="TwisWua Flight game">
+
+      <div className={styles.expeditionBar}>
+        <span>
+          <i /> ENDLESS EXPEDITION
+        </span>
+        <span>
+          01 — {hud.gates >= 15 ? "THE MISTY HIGHLANDS" : "THE SUNLIT CANOPY"}
+        </span>
+        <span className={styles.bestLabel}>
+          PERSONAL BEST <b>{String(best).padStart(2, "0")}</b>
+        </span>
+      </div>
+      <section
+        ref={stageRef}
+        className={styles.game}
+        aria-label="TwisWua Flight game"
+      >
         <canvas
           ref={canvasRef}
-          width={WORLD_W}
-          height={WORLD_H}
-          onPointerDown={(event) => { event.preventDefault(); flap(); }}
-          aria-label="TwisWua Flight. Tap or click to flap. On desktop, Space also flaps."
+          tabIndex={0}
+          aria-label="Flight arena. Tap, click, or press Space to flap. P pauses."
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            canvasRef.current?.focus({ preventScroll: true });
+            if (playing) action();
+          }}
         />
-        {phase !== "playing" && (
-          <div className={styles.overlay} onPointerDown={(event) => { event.preventDefault(); flap(); }}>
-            <div>
-              <p>{phase === "ready" ? "A LITTLE TWISWUA. A LOT OF AIR." : `SCORE ${score}`}</p>
-              <h1>{phase === "ready" ? <>Take to the <em>trees.</em></> : <>Branches <em>happen.</em></>}</h1>
-              <span>{phase === "ready" ? "Tap, click, or press Space to fly" : "Tap, click, or press Space to try again"}</span>
+        {!ready && (
+          <div className={styles.hud}>
+            <div className={styles.score}>
+              <span>SCORE</span>
+              <strong>{String(hud.score).padStart(2, "0")}</strong>
+            </div>
+            <div className={styles.runStats}>
+              <span>
+                <b>✦</b> {hud.stars}
+              </span>
+              <span>
+                {hud.distance} <small>m</small>
+              </span>
+              <span
+                className={`${styles.shieldStatus} ${hud.shield ? styles.shieldOn : ""}`}
+              >
+                {hud.shield ? "◇ SHIELD READY" : "◇ NO SHIELD"}
+              </span>
             </div>
           </div>
         )}
+        {playing && hud.noticeTime > 0 && (
+          <div className={styles.notice} key={hud.notice}>
+            {hud.notice}
+          </div>
+        )}
+        {playing && hud.combo > 1 && (
+          <span className={styles.combo}>
+            PERFECT STREAK <b>×{hud.combo}</b>
+          </span>
+        )}
+
+        {ready && (
+          <div className={`${styles.overlay} ${styles.readyOverlay}`}>
+            <div className={styles.launchPanel}>
+              <span className={styles.eyebrow}>
+                SMALL TIGER. WILD BLUE YONDER.
+              </span>
+              <h1>
+                Born to <em>fly.</em>
+              </h1>
+              <p>
+                A little courage. A well-timed flap.
+                <br />
+                There’s a whole jungle up here.
+              </p>
+              <button
+                className={styles.primary}
+                onClick={() => {
+                  action();
+                  canvasRef.current?.focus({ preventScroll: true });
+                }}
+              >
+                LET’S FLY <span aria-hidden="true">↗</span>
+              </button>
+              <span className={styles.startHint}>
+                TAP OR PRESS SPACE TO FLAP
+              </span>
+              <div className={styles.briefing}>
+                <span>
+                  <b>✦</b> Collect stars
+                </span>
+                <span>
+                  <b>◇</b> One free shield
+                </span>
+                <span>
+                  <b>↑</b> Find your rhythm
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        {hud.phase === "paused" && (
+          <div className={`${styles.overlay} ${styles.scrim}`}>
+            <div className={styles.resultPanel}>
+              <span className={styles.eyebrow}>A LITTLE BREATHING ROOM</span>
+              <h2>
+                On cloud <em>pause.</em>
+              </h2>
+              <p>Your flight is safe. Ready when you are.</p>
+              <button
+                className={styles.primary}
+                onClick={() => {
+                  action();
+                  canvasRef.current?.focus({ preventScroll: true });
+                }}
+              >
+                KEEP FLYING <span aria-hidden="true">↗</span>
+              </button>
+              <span className={styles.startHint}>P OR ESC TO RESUME</span>
+            </div>
+          </div>
+        )}
+        {over && (
+          <div className={`${styles.overlay} ${styles.scrim}`}>
+            <div className={styles.resultPanel}>
+              <span className={styles.eyebrow}>
+                {isRecord
+                  ? "A NEW PERSONAL BEST!"
+                  : "GOOD FLIGHT. GREAT EXCUSE TO GO AGAIN."}
+              </span>
+              <div
+                className={`${styles.medal} ${hud.gates >= 5 ? styles.earnedMedal : ""}`}
+                aria-hidden="true"
+              >
+                {hud.gates >= 30 ? "✹" : hud.gates >= 15 ? "✷" : "✦"}
+              </div>
+              <h2>
+                {isRecord ? (
+                  <>
+                    Look at you <em>soar.</em>
+                  </>
+                ) : (
+                  <>
+                    Another round
+                    <br />
+                    of <em>altitude?</em>
+                  </>
+                )}
+              </h2>
+              <span className={styles.medalName}>{flightMedal(hud.gates)}</span>
+              <div className={styles.results}>
+                <div>
+                  <span>SCORE</span>
+                  <strong>{hud.score}</strong>
+                </div>
+                <div>
+                  <span>BEST</span>
+                  <strong>{best}</strong>
+                </div>
+                <div>
+                  <span>STARS</span>
+                  <strong>{hud.stars}</strong>
+                </div>
+              </div>
+              <p className={styles.resultDetail}>
+                {hud.gates} gates cleared · {hud.distance} m flown
+                {hud.bestCombo > 1 ? ` · ×${hud.bestCombo} best streak` : ""}
+              </p>
+              <button
+                className={styles.primary}
+                onClick={() => {
+                  action();
+                  canvasRef.current?.focus({ preventScroll: true });
+                }}
+              >
+                ONE MORE FLIGHT <span aria-hidden="true">↻</span>
+              </button>
+              <Link href="/" className={styles.returnLink}>
+                Back to the arcade
+              </Link>
+            </div>
+          </div>
+        )}
+        <div className={styles.screenLabel} aria-hidden="true">
+          <span>TW / FLIGHT</span>
+          <span>EST. FOR THE FUN OF IT</span>
+        </div>
       </section>
+
       <footer className={styles.controls}>
-        <span className={styles.desktop}>SPACEBAR OR MOUSE CLICK TO FLAP</span>
-        <span className={styles.mobile}>TAP ANYWHERE TO FLAP</span>
-        <span>PASS A TREE · +1</span>
+        <div className={styles.controlTip}>
+          <span className={styles.keycap}>↑</span>
+          <div>
+            <strong>ONE TAP. ONE FLAP.</strong>
+            <span>
+              Click, tap, or press <kbd>SPACE</kbd>
+            </span>
+          </div>
+        </div>
+        <div className={styles.medalProgress}>
+          <span>
+            {hud.gates >= 30
+              ? "GOLD WINGS EARNED"
+              : `NEXT WINGS · ${hud.gates} / ${milestone} GATES`}
+          </span>
+          <div>
+            <i
+              style={{
+                width: `${Math.min(100, (hud.gates / milestone) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+        <button
+          className={styles.flapButton}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            action();
+          }}
+          onClick={(event) => {
+            if (event.detail === 0) action();
+          }}
+          aria-label={
+            playing
+              ? "Flap wings"
+              : hud.phase === "paused"
+                ? "Resume flight with flap"
+                : "Start flight"
+          }
+        >
+          FLAP <span aria-hidden="true">↑</span>
+        </button>
+        <span className={styles.desktopNote}>
+          CHASE STARS.
+          <br />
+          <b>NOT THE GROUND.</b>
+        </span>
       </footer>
+      {storageUnavailable && (
+        <p className={styles.storageNotice} role="status">
+          Scores can’t be saved in this browser. You can still play.
+        </p>
+      )}
     </main>
   );
 }
