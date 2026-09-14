@@ -1,1107 +1,273 @@
-.launcher {
-  --room-ink: #f4ecd8;
-  --room-muted: #a4a5a6;
-  position: relative;
-  isolation: isolate;
-  width: 100%;
-  max-width: none;
-  min-height: 100svh;
-  min-height: 100dvh;
-  margin: 0;
-  padding: 0 max(6vw, env(safe-area-inset-right)) 0
-    max(6vw, env(safe-area-inset-left));
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  color: var(--room-ink);
-  background: #16191c;
-  overflow: hidden;
-}
-.room {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-  background-image: radial-gradient(#85858a18 0.7px, transparent 0.7px);
-  background-size: 5px 5px;
-}
-.room::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 38%, #66523b20, transparent 65%);
-}
-.floor {
-  position: absolute;
-  bottom: -160px;
-  left: -50%;
-  width: 200%;
-  height: 410px;
-  transform: perspective(240px) rotateX(48deg);
-  transform-origin: center top;
-  background-image:
-    linear-gradient(#79736721 1px, transparent 1px),
-    linear-gradient(90deg, #79736721 1px, transparent 1px);
-  background-size: 64px 48px;
-  border-top: 1px solid #77726922;
-  mask-image: linear-gradient(transparent, black 25%, black 75%, transparent);
-}
-.statusBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 90px;
-  border-bottom: 1px solid #ffffff0d;
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: Outfit, sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  line-height: 1;
-}
-.brand small {
-  display: block;
-  margin-top: 6px;
-  font:
-    8px "DM Sans",
-    sans-serif;
-  letter-spacing: 3.5px;
-  color: #beb8a9;
-}
-.brandMark {
-  display: grid;
-  place-items: center;
-  width: 37px;
-  height: 37px;
-  color: #f2c878;
-  font-size: 27px;
-}
-.openSign {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font:
-    9px "Courier New",
-    monospace;
-  letter-spacing: 1.7px;
-  color: #c4c6b8;
-}
-.openSign i {
-  width: 6px;
-  height: 6px;
-  background: #a6c3a1;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #a6c3a13b;
-}
 .homeScreen {
-  min-height: 0;
-  width: min(1100px, 100%);
-  margin: auto;
-  padding: 37px 0 22px;
-}
-.heading {
-  text-align: center;
-}
-.heading > p {
+  --selection: #74e2d2;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  gap: 13px;
-  margin: 0 0 16px;
-  color: #b6ac94;
-  font:
-    8px "Courier New",
-    monospace;
+  min-height: 100%;
+  padding: clamp(24px, 6vh, 64px) 0;
+  color: #f4ecd8;
+  overflow: hidden;
+}
+.selection {
+  padding: 0 clamp(24px, 5vw, 72px);
+  margin-bottom: 24px;
+}
+.selection p {
+  margin: 0 0 10px;
+  color: #a7b8aa;
+  font-size: 10px;
   letter-spacing: 2px;
 }
-.heading > p span {
-  width: 22px;
-  height: 1px;
-  background: #a58d54;
+.selection h1 {
+  margin: 0;
+  color: var(--selection);
+  font: 500 clamp(24px, 3vw, 40px) Outfit, sans-serif;
+  letter-spacing: -0.5px;
 }
-.heading h1 {
-  color: var(--room-ink);
-  font-family: Outfit, sans-serif;
-  font-size: clamp(34px, 4vw, 51px);
-  font-weight: 650;
-  line-height: 1.08;
-  letter-spacing: -1.8px;
-  margin: 0 0 15px;
+.carousel {
+  position: relative;
 }
-.heading h1 em {
-  color: #edbe6e;
-  font-style: normal;
-}
-.heading > div {
-  font-size: 11px;
-  color: var(--room-muted);
-  line-height: 1.6;
-}
-.selectionLabel {
-  margin: 33px 0 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font:
-    8px "Courier New",
-    monospace;
-  letter-spacing: 1px;
-  color: #b3b0a5;
-}
-.selectionLabel > span:last-child {
-  color: #8c8e8f;
-  font-size: 7px;
-}
-.cabinets {
+.browse {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 38px;
-  padding: 0 5px 8px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #6c8b82;
+  border-radius: 50%;
+  background: #243837;
+  color: #f4ecd8;
+  cursor: pointer;
+}
+.browse[hidden] {
+  display: none;
+}
+.browse:hover {
+  background: #38514a;
+}
+.browse:focus-visible {
+  outline: 2px solid var(--selection);
+  outline-offset: 2px;
+}
+.previous {
+  left: 5px;
+}
+.next {
+  right: 5px;
+}
+.games {
+  display: flex;
+  gap: 22px;
+  overflow-x: hidden;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 28px;
+  padding: 12px clamp(24px, 5vw, 72px) 22px;
 }
 .survival {
-  --accent: #e8b467;
-  --accent-dim: #806542;
-  --panel: #39352e;
-  --side: #756046;
-}
-.cabinet {
-  display: block;
-  position: relative;
-  min-width: 0;
-  color: var(--room-ink);
-  text-decoration: none;
-  border: 2px solid var(--side);
-  border-radius: 10px 10px 3px 3px;
-  background: #202326;
-  box-shadow:
-    5px 5px 0 #0b0e10,
-    8px 8px 0 #31312c,
-    0 19px 28px #00000045;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  --accent: #ffcc74;
+  --cover: #26372e;
 }
 .flight {
-  --accent: #9dc8c3;
-  --accent-dim: #506f71;
-  --panel: #2d3b3d;
-  --side: #506f71;
+  --accent: #caefed;
+  --cover: #152f42;
 }
 .dash {
-  --accent: #c8cc91;
-  --accent-dim: #78835b;
-  --panel: #373e30;
-  --side: #6c7955;
+  --accent: #374d3b;
+  --cover: #ebd2a0;
 }
-.cabinet:hover,
-.cabinet:focus-visible {
-  transform: translateY(-5px);
-  border-color: var(--accent);
-  box-shadow:
-    5px 5px 0 #0b0e10,
-    8px 8px 0 var(--accent-dim),
-    0 24px 32px #00000055;
-}
-.cabinet:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 7px;
-}
-.cabinet:active {
-  transform: translateY(-1px);
-}
-.marquee {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 17px 12px;
-  background: var(--panel);
-  border-bottom: 3px solid #101416;
-  border-radius: 7px 7px 0 0;
-  text-align: center;
-  box-shadow: inset 0 1px #ffffff18;
-}
-.marquee small {
-  display: block;
-  font:
-    7px "Courier New",
-    monospace;
-  letter-spacing: 4px;
-  color: #d8d1bf;
-}
-.marquee h2 {
-  margin: 2px 0 0;
-  color: var(--accent);
-  font-family: Outfit, sans-serif;
-  font-size: 35px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  text-shadow:
-    0 2px #151a19,
-    0 0 16px color-mix(in srgb, var(--accent), transparent 85%);
-}
-.screw {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  border: 1px solid #171b1b;
-  background: #666357;
-}
-.screenHousing {
-  padding: 16px 19px 8px;
-  background: #252b2b;
-  border-left: 7px solid var(--panel);
-  border-right: 7px solid var(--panel);
-}
-.screen {
+.game {
   position: relative;
-  overflow: hidden;
-  aspect-ratio: 320 / 190;
-  border: 5px solid #11191a;
-  border-radius: 9px;
-  background: #26372e;
-  box-shadow:
-    0 0 0 1px #62675c55,
-    inset 0 0 30px #0008;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 0 0 clamp(220px, 25vw, 340px);
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  color: var(--accent);
+  background: var(--cover);
+  box-shadow: 0 3px 10px #0005;
+  transition: outline-color 160ms ease, transform 160ms ease;
+  outline: 3px solid transparent;
+  outline-offset: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+.game[aria-pressed="true"] {
+  outline-color: var(--selection);
+}
+.game:focus-visible {
+  outline-color: #fff4d9;
+}
+.game:hover {
+  transform: translateY(-3px);
+}
+.coverTitle {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding: 22px 8px 0;
+}
+.coverTitle small {
+  display: block;
+  font: 700 9px "Courier New", monospace;
+  letter-spacing: 5px;
+}
+.coverTitle strong {
+  display: block;
+  margin-top: 4px;
+  font: 800 clamp(30px, 3.5vw, 48px) Outfit, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -1px;
 }
 .artwork {
   display: block;
   width: 100%;
-  height: 100%;
-  transition: transform 0.5s ease;
+  height: auto;
+  min-height: 0;
+  flex: 1;
 }
-.cabinet:hover .artwork,
-.cabinet:focus-visible .artwork {
-  transform: scale(1.035);
-}
-.screenOverlay {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(transparent 0 3px, #00000015 3px 4px);
-  box-shadow: inset 0 0 28px #00000040;
-  pointer-events: none;
-}
-.screenPrompt {
-  position: absolute;
-  bottom: 9px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  color: #fff2cc;
-  font:
-    bold 8px "Courier New",
-    monospace;
-  letter-spacing: 2px;
-  text-shadow: 1px 1px #142a25;
-}
-.screenCaption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-  font:
-    6px "Courier New",
-    monospace;
+.coverCaption {
+  display: block;
+  padding: 10px 6px 16px;
+  font: 700 8px "Courier New", monospace;
   letter-spacing: 1px;
-  color: #acb3a2;
 }
-.screenCaption > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.screenCaption i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.controlDeck {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  height: 40px;
-  padding: 0 25px;
-  border-top: 2px solid #586052;
-  border-bottom: 6px solid #111719;
-  background: #343b35;
-  box-shadow: inset 0 2px #ffffff08;
-}
-.flight .controlDeck {
-  background: #323f40;
-  border-top-color: #566c69;
-}
-.joystick {
-  position: absolute;
-  left: 32px;
-  bottom: 6px;
-  width: 31px;
-  height: 10px;
-  border-radius: 50%;
-  background: #111919;
-  box-shadow: 0 2px #78807240;
-}
-.joystick::before {
-  content: "";
-  position: absolute;
-  width: 5px;
-  height: 22px;
-  left: 13px;
-  bottom: 4px;
-  background: #c0bfa8;
-  transform: rotate(-13deg);
-  transform-origin: bottom;
-}
-.joystick i {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  left: 3px;
-  bottom: 17px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow:
-    inset -4px -3px #0000002b,
-    0 2px 2px #0005;
-}
-.deckStripes {
-  margin-right: auto;
-  margin-left: 48px;
-  height: 7px;
-  width: 38%;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--accent-dim) 0 3px,
-    transparent 3px 7px
-  );
-  transform: skewX(-30deg);
-  opacity: 0.55;
-}
-.arcadeButton {
-  width: 15px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow:
-    0 3px #111719,
-    0 0 0 3px #171e1c;
-}
-.arcadeButton:last-child {
-  background: #c87353;
-  transform: translateY(-5px);
-}
-.cabinetBody {
-  padding: 19px 22px 12px;
-  border-top: 1px solid #ffffff08;
-  background: linear-gradient(100deg, #24282a, #1d2123);
-}
-.gameInfo > span {
-  color: var(--accent);
-  font:
-    8px "Courier New",
-    monospace;
-  letter-spacing: 1.3px;
-}
-.gameInfo p {
-  margin: 8px 0 16px;
-  color: #bbbeb5;
-  font-size: 11px;
-  line-height: 1.5;
-}
-.playButton {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--accent-dim);
-  background: #ffffff03;
-  color: var(--accent);
-  font:
-    bold 11px "Courier New",
-    monospace;
-  letter-spacing: 2px;
-  transition:
-    color 0.2s,
-    background 0.2s;
-}
-.playButton > span {
-  font-family: "DM Sans", sans-serif;
-  font-size: 22px;
-  font-weight: 400;
-}
-.cabinet:hover .playButton,
-.cabinet:focus-visible .playButton {
-  background: var(--accent);
-  color: #1d2625;
-}
-.machineFooter {
-  min-height: 24px;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 5px;
-}
-.machineFooter > span:first-child {
-  color: #9b9e94;
-  font:
-    6px "Courier New",
-    monospace;
-  letter-spacing: 0.7px;
-}
-.coinSlot {
-  display: grid;
-  place-items: center;
-  height: 24px;
-  width: 17px;
-  border: 1px solid #565b52;
-  border-radius: 2px;
-  background: #171c1d;
-}
-.coinSlot i {
-  height: 13px;
-  width: 3px;
-  background: #717970;
-  box-shadow: 1px 0 #080c0c;
-}
-.cabinetFoot {
-  position: absolute;
-  bottom: -9px;
-  left: 12px;
-  right: 12px;
-  height: 6px;
-  background: #0e1213;
-  z-index: -1;
-}
-.playNote {
-  text-align: center;
-  font-size: 10px;
-  color: #aaa99d;
-  margin: 27px 0 0;
-}
-.playNote > span {
-  color: #d9b779;
-  margin-right: 7px;
-}
-.footer {
-  position: relative;
+.details {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-top: 1px solid #ffffff0d;
-  margin: 0;
-  padding: 22px 0;
-  color: #96988f;
-  font:
-    7px "Courier New",
-    monospace;
-  letter-spacing: 1px;
+  padding: 18px clamp(24px, 5vw, 72px) 0;
 }
-.footer > span:last-child {
+.details p {
+  margin: 0;
+  color: #a7b8aa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.play {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font: inherit;
-  letter-spacing: inherit;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #f4ecd8;
+  font-size: 15px;
+  cursor: pointer;
 }
-.footer i {
-  display: block;
-  width: 3px;
-  height: 3px;
+.play span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #a6977b;
+  background: #f4ecd8;
+  color: #16191c;
+  font-weight: 700;
 }
-
-@media (min-width: 1100px) and (min-height: 1000px) {
-  .homeScreen {
-    width: 1100px;
-    padding-top: 48px;
-    padding-bottom: 38px;
-  }
-  .heading h1 {
-    font-size: 57px;
-  }
-  .selectionLabel {
-    margin-top: 42px;
-  }
-  .screenHousing {
-    padding-top: 20px;
-  }
-  .cabinetBody {
-    padding-top: 23px;
-  }
+.play:focus-visible {
+  outline: 2px solid var(--selection);
+}
+.play:hover {
+  background: #ffffff0d;
 }
 @media (max-width: 760px),
   (pointer: coarse) and (max-width: 1024px) and (max-height: 600px) {
-  .launcher {
-    height: 100svh;
-    height: 100dvh;
-    min-height: 0;
-    padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right))
-      env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left));
-    grid-template-rows: 62px minmax(0, 1fr) 42px;
-  }
-  .statusBar {
-    min-height: 0;
-  }
-  .brand {
-    font-size: 12px;
-    gap: 8px;
-    letter-spacing: 0.5px;
-  }
-  .brand small {
-    font-size: 6px;
-    letter-spacing: 2.3px;
-    margin-top: 5px;
-  }
-  .brandMark {
-    width: 28px;
-    height: 28px;
-    font-size: 21px;
-  }
-  .openSign {
-    font-size: 6px;
-    letter-spacing: 0.8px;
-    gap: 6px;
-  }
-  .openSign i {
-    width: 4px;
-    height: 4px;
-  }
   .homeScreen {
     padding: 16px 0;
-    width: min(520px, 100%);
   }
-  .heading > p {
-    font-size: 6px;
-    letter-spacing: 0.9px;
-    gap: 7px;
-    margin-bottom: 13px;
+  .selection {
+    padding: 0 20px;
+    margin-bottom: 8px;
   }
-  .heading > p span {
-    width: 12px;
-  }
-  .heading h1 {
-    font-size: clamp(26px, 7.2vw, 39px);
-    line-height: 1.12;
-    letter-spacing: -1px;
-    margin-bottom: 11px;
-  }
-  .heading h1 em {
-    display: inline-block;
-    max-width: 320px;
-  }
-  .heading > div {
-    font-size: 10px;
-    max-width: 270px;
-    margin: auto;
-    line-height: 1.6;
-  }
-  .selectionLabel {
-    margin: 25px 0 11px;
+  .selection p {
     font-size: 7px;
-    letter-spacing: 0.7px;
+    margin-bottom: 5px;
   }
-  .selectionLabel > span:last-child {
+  .selection h1 {
+    font-size: 23px;
+  }
+  .games {
+    gap: 16px;
+    padding: 10px 48px 14px;
+    scroll-padding-inline: 20px;
+  }
+  .game {
+    flex-basis: clamp(132px, 24dvh, 210px);
+  }
+  .coverTitle {
+    padding-top: 12px;
+  }
+  .coverTitle small {
     font-size: 6px;
-    letter-spacing: 0.1px;
+    letter-spacing: 3px;
   }
-  .cabinets {
-    gap: 17px;
-    padding: 0 4px 6px 0;
+  .coverTitle strong {
+    font-size: 25px;
   }
-  .cabinet {
-    border-width: 1px;
-    border-radius: 6px 6px 2px 2px;
-    box-shadow:
-      3px 3px 0 #0b0e10,
-      5px 5px 0 #31312c,
-      0 14px 18px #00000040;
-  }
-  .marquee {
-    padding: 12px 7px 10px;
-    border-radius: 5px 5px 0 0;
-    border-bottom-width: 2px;
-  }
-  .marquee small {
-    font-size: 6px;
-    letter-spacing: 2px;
-  }
-  .marquee h2 {
-    font-size: clamp(19px, 5.4vw, 28px);
-    letter-spacing: 0.3px;
-    margin-top: 4px;
-  }
-  .screw {
-    width: 3px;
-    height: 3px;
-  }
-  .screenHousing {
-    padding: 10px 7px 6px;
-    border-left-width: 4px;
-    border-right-width: 4px;
-  }
-  .screen {
-    border-width: 3px;
-    border-radius: 5px;
-  }
-  .screenPrompt {
+  .coverCaption {
     font-size: 5px;
-    bottom: 5px;
-    letter-spacing: 0.8px;
+    padding: 5px 4px 9px;
   }
-  .screenCaption {
-    font-size: 5px;
-    letter-spacing: 0.3px;
-    margin-top: 6px;
+  .details {
+    padding: 8px 20px 0;
   }
-  .screenCaption i {
-    width: 3px;
-    height: 3px;
+  .details p {
+    font-size: 10px;
   }
-  .controlDeck {
-    height: 29px;
-    padding: 0 13px;
-    gap: 8px;
-    border-bottom-width: 4px;
-  }
-  .joystick {
-    left: 14px;
-    bottom: 4px;
-    width: 22px;
-    height: 7px;
-  }
-  .joystick::before {
-    height: 16px;
-    width: 4px;
-    left: 9px;
-  }
-  .joystick i {
-    width: 13px;
-    height: 13px;
-    left: 2px;
-    bottom: 12px;
-  }
-  .deckStripes {
-    margin-left: 26px;
-    width: 16%;
-    height: 5px;
-  }
-  .arcadeButton {
-    width: 11px;
-    height: 7px;
-    box-shadow:
-      0 2px #111719,
-      0 0 0 2px #171e1c;
-  }
-  .cabinetBody {
-    padding: 12px 11px 8px;
-  }
-  .gameInfo > span {
-    font-size: 6px;
-    letter-spacing: 0.5px;
-  }
-  .gameInfo p {
-    font-size: 9px;
-    margin: 7px 0 12px;
-    min-height: 40px;
-    line-height: 1.5;
-  }
-  .playButton {
-    min-height: 38px;
-    padding: 0 9px;
-    font-size: 9px;
-    letter-spacing: 1px;
-  }
-  .playButton > span {
-    font-size: 18px;
-  }
-  .machineFooter {
-    margin-top: 9px;
-    min-height: 17px;
-  }
-  .machineFooter > span:first-child {
-    font-size: 5px;
-    letter-spacing: 0;
-    max-width: 82px;
-    line-height: 1.6;
-  }
-  .coinSlot {
-    width: 12px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-  .coinSlot i {
-    height: 9px;
-    width: 2px;
-  }
-  .playNote {
-    font-size: 8px;
-    margin-top: 21px;
-  }
-  .footer {
-    display: flex;
-    padding: 0;
-    font-size: 5px;
-    gap: 8px;
-    letter-spacing: 0.3px;
-  }
-  .footer > span:last-child {
-    font-size: 5px;
-    gap: 4px;
-  }
-  .floor {
-    bottom: -220px;
+  .play {
+    display: none;
   }
 }
 @media (max-width: 760px) and (max-height: 700px) {
-  .launcher {
-    grid-template-rows: 49px minmax(0, 1fr) 31px;
-  }
   .homeScreen {
-    padding: 8px 0;
+    padding: 10px 0;
   }
-  .heading > p {
-    margin-bottom: 8px;
-  }
-  .heading h1 {
-    font-size: 26px;
-    margin-bottom: 8px;
-  }
-  .heading h1 em {
-    max-width: 260px;
-  }
-  .heading > div {
-    font-size: 9px;
-  }
-  .selectionLabel {
-    margin-top: 16px;
-    margin-bottom: 8px;
-  }
-  .marquee {
-    padding-top: 9px;
-    padding-bottom: 8px;
-  }
-  .cabinetBody {
-    padding-top: 9px;
-  }
-  .gameInfo p {
-    min-height: 28px;
-    margin-top: 5px;
-    margin-bottom: 9px;
-  }
-  .machineFooter {
-    margin-top: 7px;
-  }
-  .playNote {
-    margin-top: 15px;
-    font-size: 7px;
-  }
-}
-@media (max-width: 760px) and (max-height: 600px) {
-  .playNote {
+  .selection p,
+  .details {
     display: none;
   }
-  .heading > div {
-    font-size: 8px;
-  }
-  .selectionLabel {
-    margin-top: 12px;
-  }
-}
-@media (max-width: 360px) {
-  .launcher {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  .cabinets {
-    gap: 13px;
-  }
-  .selectionLabel > span:last-child {
-    font-size: 5px;
-  }
-  .cabinetBody {
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-  .marquee h2 {
-    font-size: 18px;
+  .selection h1 {
+    font-size: 19px;
   }
 }
 @media (max-width: 760px) and (max-height: 500px),
   (pointer: coarse) and (max-width: 1024px) and (max-height: 500px) {
-  .launcher {
-    grid-template-rows: 43px minmax(0, 1fr) 25px;
-  }
   .homeScreen {
-    width: min(740px, 100%);
-    display: grid;
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 0 30px;
-    align-items: center;
-    padding: 8px 0;
+    padding: 5px 0;
   }
-  .heading {
-    grid-column: 1;
-    grid-row: 1 / 4;
-    text-align: left;
-  }
-  .heading > p {
-    justify-content: flex-start;
-    font-size: 5px;
-    line-height: 1.6;
-  }
-  .heading > p span {
+  .selection,
+  .details {
     display: none;
   }
-  .heading h1 {
-    font-size: 27px;
+  .games {
+    padding-block: 9px;
   }
-  .heading > div {
-    font-size: 9px;
+  .game {
+    flex-basis: 105px;
   }
-  .selectionLabel {
-    grid-column: 2;
-    margin: 0 0 7px;
-  }
-  .selectionLabel > span:last-child {
-    display: none;
-  }
-  .cabinets {
-    grid-column: 2;
-    gap: 15px;
-  }
-  .marquee {
-    padding-top: 5px;
-    padding-bottom: 5px;
-  }
-  .marquee h2 {
-    font-size: 19px;
-  }
-  .marquee small {
-    font-size: 5px;
-  }
-  .screenHousing {
+  .coverTitle {
     padding-top: 6px;
-    padding-bottom: 5px;
   }
-  .screen {
-    max-height: 74px;
+  .coverTitle strong {
+    font-size: 18px;
   }
-  .screenCaption,
-  .machineFooter,
-  .gameInfo p {
+  .coverCaption {
     display: none;
-  }
-  .controlDeck {
-    height: 24px;
-  }
-  .cabinetBody {
-    padding: 8px;
-  }
-  .gameInfo {
-    margin-bottom: 6px;
-  }
-  .playButton {
-    min-height: 32px;
-  }
-  .playNote {
-    grid-column: 2;
-    margin: 8px 0 0;
-    font-size: 6px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cabinet,
-  .artwork,
-  .playButton {
+  .game {
     transition: none;
-  }
-}
-
-@media (max-width: 760px) and (min-height: 501px) {
-  .homeScreen {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: min(520px, 100%);
-    padding: 12px 0;
-  }
-  .heading > p {
-    margin-bottom: 8px;
-  }
-  .heading h1 {
-    font-size: clamp(25px, 6vw, 34px);
-    margin-bottom: 8px;
-  }
-  .heading h1 br {
-    display: none;
-  }
-  .heading > div {
-    font-size: 9px;
-  }
-  .selectionLabel {
-    flex-shrink: 0;
-    margin: 16px 0 10px;
-  }
-  .cabinets {
-    flex: 1;
-    min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(3, minmax(0, 1fr));
-    gap: 13px;
-  }
-  .cabinet {
-    display: grid;
-    grid-template-columns: 0.85fr 1.15fr;
-    grid-template-rows: 30px minmax(0, 1fr);
-  }
-  .marquee {
-    grid-column: 1 / -1;
-    padding: 5px 12px;
-  }
-  .marquee > div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .marquee small {
-    font-size: 5px;
-  }
-  .marquee h2 {
-    font-size: 19px;
-    margin: 0;
-  }
-  .screenHousing {
-    padding: 8px;
-    min-height: 0;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr);
-    border-width: 3px;
-  }
-  .screen {
-    height: 100%;
-    width: 100%;
-    aspect-ratio: auto;
-    border-width: 3px;
-  }
-  .screenCaption,
-  .controlDeck,
-  .machineFooter,
-  .playNote {
-    display: none;
-  }
-  .cabinetBody {
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 0;
-  }
-  .gameInfo > span {
-    font-size: 6px;
-  }
-  .gameInfo p {
-    font-size: 9px;
-    min-height: 0;
-    margin: 6px 0 9px;
-  }
-  .playButton {
-    min-height: 31px;
-    font-size: 8px;
-    flex-shrink: 0;
-  }
-}
-@media (max-width: 760px) and (min-height: 501px) and (max-height: 650px) {
-  .homeScreen {
-    padding: 7px 0;
-  }
-  .heading > p,
-  .heading > div {
-    display: none;
-  }
-  .heading h1 {
-    font-size: 24px;
-    line-height: 1.05;
-    margin: 3px 0 0;
-  }
-  .heading h1 em {
-    max-width: 260px;
-  }
-  .selectionLabel {
-    margin: 10px 0 8px;
-  }
-  .cabinets {
-    gap: 10px;
-  }
-  .cabinet {
-    grid-template-rows: 25px minmax(0, 1fr);
-  }
-  .marquee h2 {
-    font-size: 16px;
-  }
-  .cabinetBody {
-    padding: 6px 9px;
-  }
-  .gameInfo p {
-    font-size: 8px;
-    margin: 4px 0 6px;
-  }
-  .playButton {
-    min-height: 27px;
-  }
-}
-@media (max-width: 760px) and (max-height: 500px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 500px) {
-  .homeScreen {
-    grid-template-columns: 0.55fr 1.45fr;
-    gap: 0 18px;
-  }
-  .heading h1 {
-    font-size: 23px;
-  }
-  .heading > div {
-    font-size: 8px;
-  }
-  .cabinets {
-    gap: 10px;
-  }
-  .marquee h2 {
-    font-size: 15px;
-  }
-  .marquee small {
-    font-size: 4px;
-  }
-  .screenHousing {
-    padding: 6px 4px;
-    border-width: 2px;
-  }
-  .screen {
-    border-width: 2px;
-  }
-  .screenPrompt {
-    font-size: 4px;
-  }
-  .gameInfo > span {
-    font-size: 5px;
-    letter-spacing: 0;
-  }
-  .playButton {
-    font-size: 7px;
-    padding: 0 5px;
-    min-height: 30px;
-  }
-  .playButton > span {
-    font-size: 14px;
   }
 }

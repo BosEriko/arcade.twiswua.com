@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { Phase } from "../lib/game";
 
 type Props = {
+  menu?: boolean;
   phase: Phase;
   dashCooldown: number;
   roarCooldown: number;
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export default function HandheldControls({
+  menu = false,
   phase,
   dashCooldown,
   roarCooldown,
@@ -26,7 +28,7 @@ export default function HandheldControls({
 }: Props) {
   const pointer = useRef<number | null>(null);
   const [stick, setStick] = useState({ x: 0, y: 0 });
-  const playing = phase === "playing";
+  const playing = menu || phase === "playing";
 
   useEffect(() => {
     if (!playing) {
@@ -67,7 +69,28 @@ export default function HandheldControls({
         <div className="joystick-group">
           <button
             className="joystick"
-            aria-label="Movement joystick. Drag to move; release to stop."
+            aria-label={
+              menu
+                ? "Game selection joystick. Drag or use arrow keys to browse."
+                : "Movement joystick. Drag to move; release to stop."
+            }
+            onKeyDown={(event) => {
+              if (!menu) return;
+              if (
+                ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].includes(event.key)
+              ) {
+                event.preventDefault();
+                if (!event.repeat) {
+                  onMove(["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 1, 0);
+                }
+              }
+            }}
+            onKeyUp={() => {
+              if (menu) onMove(0, 0);
+            }}
+            onBlur={() => {
+              if (menu) onMove(0, 0);
+            }}
             disabled={!playing}
             onPointerDown={(event) => {
               if (pointer.current !== null) return;
@@ -92,13 +115,13 @@ export default function HandheldControls({
               <span />
             </span>
           </button>
-          <span className="control-caption">MOVE</span>
+          <span className="control-caption">{menu ? "SELECT" : "MOVE"}</span>
         </div>
         <div className="action-buttons">
           <div className="action-group action-b">
             <button
               className="console-action"
-              aria-label="B: Roar"
+              aria-label={menu ? "B: Previous game" : "B: Roar"}
               disabled={!playing || roarCooldown > 0}
               onPointerDown={(event) => {
                 event.preventDefault();
@@ -111,13 +134,17 @@ export default function HandheldControls({
               B
             </button>
             <span className="control-caption">
-              {roarCooldown > 0 ? `${Math.ceil(roarCooldown)}s` : "ROAR"}
+              {menu
+                ? "PREVIOUS"
+                : roarCooldown > 0
+                  ? `${Math.ceil(roarCooldown)}s`
+                  : "ROAR"}
             </span>
           </div>
           <div className="action-group action-a">
             <button
               className="console-action"
-              aria-label="A: Dash"
+              aria-label={menu ? "A: Play selected game" : "A: Dash"}
               disabled={!playing || dashCooldown > 0}
               onPointerDown={(event) => {
                 event.preventDefault();
@@ -130,7 +157,11 @@ export default function HandheldControls({
               A
             </button>
             <span className="control-caption">
-              {dashCooldown > 0 ? `${Math.ceil(dashCooldown)}s` : "DASH"}
+              {menu
+                ? "PLAY"
+                : dashCooldown > 0
+                  ? `${Math.ceil(dashCooldown)}s`
+                  : "DASH"}
             </span>
           </div>
         </div>
@@ -139,14 +170,14 @@ export default function HandheldControls({
         <div className="console-system-buttons">
           <button
             onClick={onPause}
-            disabled={phase !== "playing" && phase !== "paused"}
+            disabled={!menu && phase !== "playing" && phase !== "paused"}
           >
             <span />
-            {phase === "paused" ? "RESUME" : "PAUSE"}
+            {menu ? "NEXT" : phase === "paused" ? "RESUME" : "PAUSE"}
           </button>
           <button
             onClick={phase === "paused" ? onPause : onStart}
-            disabled={playing || phase === "upgrade"}
+            disabled={!menu && (playing || phase === "upgrade")}
           >
             <span />
             START
@@ -161,11 +192,13 @@ export default function HandheldControls({
         </div>
       </div>
       <p className="console-hint">
-        {phase === "ready"
-          ? "Press START. Answer the call of the wild."
-          : phase === "upgrade"
-            ? "Pick your upgrade on the screen above."
-            : "Auto-claws on. Keep your paws moving."}
+        {menu
+          ? "Move to select. Press A or START to play."
+          : phase === "ready"
+            ? "Press START. Answer the call of the wild."
+            : phase === "upgrade"
+              ? "Pick your upgrade on the screen above."
+              : "Auto-claws on. Keep your paws moving."}
       </p>
     </section>
   );

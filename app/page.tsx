@@ -1,11 +1,15 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import GameShell from "./game-shell";
+import HandheldControls from "./handheld-controls";
 import styles from "./hub.module.css";
 
 const games = [
   {
     href: "/survival",
     name: "Survival",
-    number: "01",
     genre: "SURVIVAL ROGUELITE",
     description: "Small paws. Big trouble. Take on the flock.",
     instruction: "DODGE · UPGRADE · SURVIVE",
@@ -14,7 +18,6 @@ const games = [
   {
     href: "/flappy",
     name: "Flight",
-    number: "02",
     genre: "ONE-TAP ARCADE",
     description: "Find your wings. Try not to find a tree.",
     instruction: "TAP · FLY · TRY AGAIN",
@@ -23,7 +26,6 @@ const games = [
   {
     href: "/runner",
     name: "Dash",
-    number: "03",
     genre: "ENDLESS RUNNER",
     description: "Small paws. No brakes. Chase the horizon.",
     instruction: "JUMP · DUCK · KEEP RUNNING",
@@ -179,115 +181,156 @@ function GameArtwork({ flight, dash }: { flight: boolean; dash: boolean }) {
 }
 
 export default function Page() {
+  const [selected, setSelected] = useState(0);
+  const direction = useRef(0);
+  const pointerSelection = useRef(0);
+  const rail = useRef<HTMLDivElement>(null);
+  const tiles = useRef<(HTMLButtonElement | null)[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const container = rail.current;
+    const tile = tiles.current[selected];
+    if (!container || !tile) return;
+    const reveal = () => {
+      container.scrollTo({
+        left:
+          container.scrollLeft + tile.getBoundingClientRect().left
+          - container.getBoundingClientRect().left
+          - (container.clientWidth - tile.offsetWidth) / 2,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
+    };
+    reveal();
+    const observer = new ResizeObserver(reveal);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [selected]);
+
+  function select(offset: number) {
+    setSelected((current) => Math.max(0, Math.min(games.length - 1, current + offset)));
+  }
+
+  function move(x: number, y: number) {
+    const axis = Math.abs(x) >= Math.abs(y) ? x : y;
+    const next = Math.abs(axis) < 0.4 ? 0 : Math.sign(axis);
+    if (next !== 0 && next !== direction.current) select(next);
+    direction.current = next;
+  }
+
+  function play() {
+    router.push(games[selected].href);
+  }
+
   return (
-    <main className={styles.launcher}>
-      <div className={styles.room} aria-hidden="true">
-        <div className={styles.floor} />
-      </div>
-      <header className={styles.statusBar}>
-        <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true">
-            🐯
-          </span>
-          <span>
-            TWISWUA&apos;S<small>ARCADE ROOM</small>
-          </span>
-        </div>
-        <span className={styles.openSign}>
-          <i /> ALL PLAY. NO PAY.
+    <GameShell
+      status="SELECT YOUR GAME"
+      statusRight={
+        <span aria-live="polite" aria-atomic="true">
+          {String(selected + 1).padStart(2, "0")} / {String(games.length).padStart(2, "0")} ·{" "}
+          {games[selected].name}
         </span>
-      </header>
-
-      <section className={styles.homeScreen} aria-labelledby="arcade-heading">
-        <div className={styles.heading}>
-          <p>
-            <span /> YOUR NEXT HIGH SCORE STARTS HERE <span />
-          </p>
-          <h1 id="arcade-heading">
-            Small games.
-            <br />
-            <em>Big “one more try” energy.</em>
-          </h1>
-          <div>
-            Leave the real world at the door. Pick a machine and make yourself
-            at home.
-          </div>
+      }
+      hint="Pick a machine and make yourself at home."
+      controls={
+        <HandheldControls
+          menu
+          phase="ready"
+          dashCooldown={0}
+          roarCooldown={0}
+          onMove={move}
+          onDash={play}
+          onRoar={() => select(-1)}
+          onStart={play}
+          onPause={() => select(1)}
+        />
+      }
+    >
+      <section className={styles.homeScreen} aria-label="Choose a game">
+        <div className={styles.selection}>
+          <p>{games[selected].genre}</p>
+          <h1>TwisWua {games[selected].name}</h1>
         </div>
-
-        <div className={styles.selectionLabel}>
-          <span>↓ SELECT YOUR GAME</span>
-          <span>03 MACHINES · INFINITE CONTINUES</span>
-        </div>
-        <div className={styles.cabinets}>
-          {games.map((game) => (
-            <Link
-              key={game.href}
-              href={game.href}
-              className={`${styles.cabinet} ${game.className}`}
-              aria-label={`Play TwisWua ${game.name}`}
-            >
-              <div className={styles.marquee}>
-                <span className={styles.screw} />
-                <div>
+        <div className={styles.carousel}>
+          <button
+            type="button"
+            className={`${styles.browse} ${styles.previous}`}
+            aria-label="Previous game"
+            hidden={selected === 0}
+            onClick={() => select(-1)}
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+              <path d="m15 6-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <div
+            className={styles.games}
+            ref={rail}
+            onKeyDown={(event) => {
+              let next: number;
+              if (event.key === "ArrowRight") next = Math.min(games.length - 1, selected + 1);
+              else if (event.key === "ArrowLeft") {
+                next = Math.max(0, selected - 1);
+              } else if (event.key === "Home") next = 0;
+              else if (event.key === "End") next = games.length - 1;
+              else return;
+              event.preventDefault();
+              tiles.current[next]?.focus({ preventScroll: true });
+            }}
+          >
+            {games.map((game, index) => (
+              <button
+                key={game.href}
+                ref={(element) => {
+                  tiles.current[index] = element;
+                }}
+                type="button"
+                className={`${styles.game} ${game.className}`}
+                aria-label={`TwisWua ${game.name}`}
+                aria-pressed={index === selected}
+                onFocus={() => setSelected(index)}
+                onPointerDown={() => {
+                  pointerSelection.current = selected;
+                }}
+                onClick={(event) => {
+                  if (event.detail === 0 || index === pointerSelection.current) {
+                    router.push(game.href);
+                  } else setSelected(index);
+                }}
+              >
+                <span className={styles.coverTitle}>
                   <small>TWISWUA</small>
-                  <h2>{game.name}</h2>
-                </div>
-                <span className={styles.screw} />
-              </div>
-              <div className={styles.screenHousing}>
-                <div className={styles.screen}>
-                  <GameArtwork
-                    flight={game.name === "Flight"}
-                    dash={game.name === "Dash"}
-                  />
-                  <div className={styles.screenOverlay} />
-                  <span className={styles.screenPrompt}>PRESS PLAY</span>
-                </div>
-                <div className={styles.screenCaption}>
-                  <span>
-                    <i /> READY TO PLAY
-                  </span>
-                  <span>{game.number}</span>
-                </div>
-              </div>
-              <div className={styles.controlDeck} aria-hidden="true">
-                <span className={styles.joystick}>
-                  <i />
+                  <strong>{game.name}</strong>
                 </span>
-                <span className={styles.deckStripes} />
-                <span className={styles.arcadeButton} />
-                <span className={styles.arcadeButton} />
-              </div>
-              <div className={styles.cabinetBody}>
-                <div className={styles.gameInfo}>
-                  <span>{game.genre}</span>
-                  <p>{game.description}</p>
-                </div>
-                <span className={styles.playButton}>
-                  PLAY NOW <span aria-hidden="true">↗</span>
-                </span>
-                <div className={styles.machineFooter}>
-                  <span>{game.instruction}</span>
-                  <span className={styles.coinSlot} aria-hidden="true">
-                    <i />
-                  </span>
-                </div>
-              </div>
-              <span className={styles.cabinetFoot} aria-hidden="true" />
-            </Link>
-          ))}
+                <GameArtwork
+                  flight={game.name === "Flight"}
+                  dash={game.name === "Dash"}
+                />
+                <span className={styles.coverCaption}>{game.instruction}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={`${styles.browse} ${styles.next}`}
+            aria-label="Next game"
+            hidden={selected === games.length - 1}
+            onClick={() => select(1)}
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+              <path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
-        <p className={styles.playNote}>
-          <span aria-hidden="true">✦</span> No coins. No downloads. Just one
-          more round.
-        </p>
+        <div className={styles.details}>
+          <p>{games[selected].description}</p>
+          <button type="button" onClick={play} className={styles.play}>
+            <span aria-hidden="true">A</span> Start
+          </button>
+        </div>
       </section>
-      <footer className={styles.footer}>
-        <span>A LITTLE TIGER. A WHOLE LOT OF PLAY.</span>
-        <span>
-          DESKTOP & MOBILE <i /> ALWAYS OPEN
-        </span>
-      </footer>
-    </main>
+    </GameShell>
   );
 }

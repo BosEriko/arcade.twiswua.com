@@ -10,6 +10,34 @@ import {
 } from "../lib/leaderboard";
 import styles from "./game-shell.module.css";
 
+type Props = {
+  children: ReactNode;
+  controls: ReactNode;
+  status: string;
+  statusRight?: ReactNode;
+  hint: string;
+  extraActions?: ReactNode;
+  sidebar?: ReactNode;
+  overlays?: ReactNode;
+} & (
+  | {
+      game: ArcadeGame;
+      phase: string;
+      muted: boolean;
+      onMusic: () => void;
+      onPause: () => void;
+      result: ArcadeResult | null;
+    }
+  | {
+      game?: never;
+      phase?: never;
+      muted?: never;
+      onMusic?: never;
+      onPause?: never;
+      result?: never;
+    }
+);
+
 export default function GameShell({
   game,
   phase,
@@ -25,63 +53,57 @@ export default function GameShell({
   extraActions,
   sidebar,
   overlays,
-}: {
-  game: ArcadeGame;
-  phase: string;
-  muted: boolean;
-  onMusic: () => void;
-  onPause: () => void;
-  result: ArcadeResult | null;
-  children: ReactNode;
-  controls: ReactNode;
-  status: string;
-  statusRight?: ReactNode;
-  hint: string;
-  extraActions?: ReactNode;
-  sidebar?: ReactNode;
-  overlays?: ReactNode;
-}) {
+}: Props) {
+  const title = game ? ARCADE_GAMES[game].name : "Arcade Room";
   return (
-    <main className={styles.shell}>
+    <main className={`${styles.shell} ${game ? "" : styles.menuShell}`}>
       <header className={styles.header}>
-        <Link href="/" className={styles.back} aria-label="Back to the arcade">
-          ←<span>ARCADE ROOM</span>
-        </Link>
+        {game ? (
+          <Link href="/" className={styles.back} aria-label="Back to the arcade">
+            ←<span>ARCADE ROOM</span>
+          </Link>
+        ) : (
+          <span aria-hidden="true" />
+        )}
         <div className={styles.brand}>
           <span aria-hidden="true">🐯</span>
           <span>
-            TWISWUA <strong>{ARCADE_GAMES[game].name.toUpperCase()}</strong>
+            TWISWUA <strong>{title.toUpperCase()}</strong>
           </span>
         </div>
         <div className={styles.actions}>
           {extraActions}
-          <HighScores
-            game={game}
-            result={result}
-            onOpen={() => {
-              if (phase === "playing") onPause();
-            }}
-          />
-          <button
-            onClick={onMusic}
-            aria-label={muted ? "Enable music" : "Mute music"}
-            aria-pressed={!muted}
-          >
-            ♫
-          </button>
-          <button
-            onClick={onPause}
-            disabled={phase !== "playing" && phase !== "paused"}
-            aria-label={phase === "paused" ? "Resume game" : "Pause game"}
-          >
-            {phase === "paused" ? "▷" : "Ⅱ"}
-          </button>
+          {game && (
+            <>
+              <HighScores
+                game={game}
+                result={result}
+                onOpen={() => {
+                  if (phase === "playing") onPause();
+                }}
+              />
+              <button
+                onClick={onMusic}
+                aria-label={muted ? "Enable music" : "Mute music"}
+                aria-pressed={!muted}
+              >
+                ♫
+              </button>
+              <button
+                onClick={onPause}
+                disabled={phase !== "playing" && phase !== "paused"}
+                aria-label={phase === "paused" ? "Resume game" : "Pause game"}
+              >
+                {phase === "paused" ? "▷" : "Ⅱ"}
+              </button>
+            </>
+          )}
         </div>
       </header>
       <div className={styles.cabinetSlot} data-game={game}>
         <section
           className={styles.cabinet}
-          aria-label={`${ARCADE_GAMES[game].name} game console`}
+          aria-label={game ? `${title} game console` : "Arcade Room console"}
         >
           <div className={styles.status}>
             <span>● {status}</span>
@@ -90,7 +112,9 @@ export default function GameShell({
           <div
             className={`${styles.viewport} ${sidebar ? styles.withSidebar : ""}`}
           >
-            <div className={styles.screen}>{children}</div>
+            <div className={`${styles.screen} ${game ? "" : styles.menuScreen}`}>
+              {children}
+            </div>
             {sidebar && <div className={styles.sidebar}>{sidebar}</div>}
           </div>
         </section>
