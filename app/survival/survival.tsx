@@ -7,6 +7,7 @@ import { draw, tiger } from "../../lib/draw";
 import { HEIGHT, WIDTH, powerups, type Upgrade } from "../../lib/game";
 import { useRoom } from "./use-room";
 import styles from "./survival.module.css";
+import HighScores from "../high-scores";
 
 export default function Survival() {
   const online = useRoom();
@@ -170,6 +171,17 @@ export default function Survival() {
           TwisWua Survival
         </a>
         <div className={styles.actions}>
+          <HighScores
+            game="survival"
+            result={
+              room && online.host && phase === "over"
+                ? {
+                    id: `team_${code}_${room.createdAt}_${room.state.round}`,
+                    score: room.state.world.kills,
+                  }
+                : null
+            }
+          />
           {!code && (
             <button className={styles.button} onClick={() => setLobby(false)}>
               Solo play

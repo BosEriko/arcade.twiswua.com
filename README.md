@@ -87,4 +87,34 @@ This uses local test identities to check room ownership, four-player capacity, i
 
 Each additional player adds 65% to the wave enemy budget, 35% to enemy health, and 20% to the spawn-rate multiplier. Difficulty uses the party size at the start of the wave, including fallen teammates; departures affect the next wave. The host rolls three distinct powerup choices per wave, shares them with the team, and rejects choices outside that menu.
 
-The GitHub workflow `.github/workflows/deploy-database-rules.yml` deploys `database.rules.json` to the `twiswua-com` project when the rules, Firebase configuration, or workflow change on `main`. It uses the existing `FIREBASE_TOKEN` repository secret and Firebase CLI's `--only database` target, as documented in the [Firebase CLI reference](https://firebase.google.com/docs/cli#deploy_specific_firebase_services). Deploy the updated rules along with this release so all eight upgrade choices are accepted.
+The GitHub workflow `.github/workflows/deploy-database-rules.yml` deploys `database.rules.json` and `firestore.rules` to the `twiswua-com` project when the rules, Firebase configuration, or workflow change on `main`. It uses the existing `FIREBASE_TOKEN` repository secret and Firebase CLI's `--only database,firestore:rules` targets, as documented in the [Firebase CLI reference](https://firebase.google.com/docs/cli#deploy_specific_firebase_services). Deploy the updated rules along with this release so all eight upgrade choices are accepted.
+
+## High scores and shared game console
+
+All three solo games use `app/game-shell.tsx` for their header, score-board button, screen frame, and responsive console. Mobile keeps the game in the upper half and handheld controls below. Survival retains its joystick and A/B abilities. Flight uses A to flap and B to pause. Dash uses A to jump and hold-B to crouch; on desktop, **Spacebar jumps and S crouches**. Dash's scenery now fades through day/night changes instead of switching palettes instantly.
+
+Each game has its own public top-10 board: Survival ranks ducks defeated (solo and host-submitted co-op team runs), Flight ranks points, and Dash ranks distance points. A qualifying completed run opens a three-letter A–Z initials selector with up/down arrows. Equal scores keep earlier entries; a tie with tenth place does not replace it. Local personal records remain independent of the shared boards.
+
+Firestore stores one document per game at `arcadeLeaderboards/{survival|flight|dash}`, containing at most ten entries. Each entry includes its Firebase account UID, initials, score, and server timestamp. Signed-in scores use the player's existing Google account. Logged-out submissions use a persistent anonymous account in a separate Firebase app instance, so guest score entry does not sign the player into Survival co-op. The public board displays initials and scores only. Signing in later does not retroactively transfer guest entries.
+
+### Enable production high scores
+
+1. In the existing Firebase project, create the default **Cloud Firestore** database if it does not exist.
+2. Enable **Authentication → Sign-in method → Anonymous**, and keep Google enabled for account sign-in. Configure authorized domains for the deployed site and localhost.
+3. Set `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, and `NEXT_PUBLIC_FIREBASE_APP_ID` before building. Keep `NEXT_PUBLIC_FIREBASE_EMULATORS=0` in production. Survival co-op additionally needs its existing database URL.
+4. Deploy the Firestore rules with `firebase deploy --only firestore:rules --project twiswua-com`, or let `.github/workflows/deploy-database-rules.yml` publish them on the next matching push to `main`. That workflow now deploys both Realtime Database and Firestore rules using the existing secret.
+5. Rebuild/redeploy the Next.js app, finish a scoring run, select three initials, and save. Open the board in another browser to confirm the entry.
+
+Client transactions re-read the board before inserting a qualifying score and removing its lowest entry. Rules reject unauthenticated writes, ownership spoofing, invalid initials/scores, edits to existing entries, board deletion, and boards larger than ten. Concurrent submissions retry against the current board; submitting the same run twice is idempotent. These are casual client-simulated games, not a server-verified competitive leaderboard. Rules enforce the data structure and account ownership, not the authenticity of gameplay.
+
+The integration follows Firebase's [transaction guidance](https://firebase.google.com/docs/firestore/manage-data/transactions), [field validation rules](https://firebase.google.com/docs/firestore/security/rules-fields), and [anonymous authentication](https://firebase.google.com/docs/auth/web/anonymous-auth).
+
+### Local score-board verification
+
+With Java 21+ and Firebase CLI installed:
+
+```sh
+firebase emulators:exec --only auth,firestore --project demo-twiswua 'node --experimental-strip-types --test tests/firestore.integration.ts'
+```
+
+This checks signed-in and guest ownership, public reads while signed out, duplicate submission, concurrent writers, eviction of the lowest score, ten-entry retention, and denied invalid writes. It uses a demo project and clears only that emulator's Firestore data. To exercise the UI against running local emulators, use demo Firebase config values with project ID `demo-twiswua` and `NEXT_PUBLIC_FIREBASE_EMULATORS=1` before building or starting development. Emulator routing is restricted to project IDs beginning with `demo-`.

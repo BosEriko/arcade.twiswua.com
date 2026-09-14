@@ -212,15 +212,29 @@ export function drawFlight(
         ? now
         : run.time;
   const scroll = preview ? clock * 12 : run.distance;
-  const dusk = run.gatesPassed >= 15;
+  const cycle = Math.floor(run.time / 25);
+  const progress = Math.min(1, (run.time % 25) / 8);
+  const eased = progress * progress * (3 - 2 * progress);
+  const dusk = cycle === 0 ? 0 : cycle % 2 ? eased : 1 - eased;
+  const blend = (day: string, night: string) =>
+    "#" +
+    [1, 3, 5]
+      .map((offset) => {
+        const a = parseInt(day.slice(offset, offset + 2), 16);
+        const b = parseInt(night.slice(offset, offset + 2), 16);
+        return Math.round(a + (b - a) * dusk)
+          .toString(16)
+          .padStart(2, "0");
+      })
+      .join("");
   const sky = c.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, dusk ? "#b6cbd1" : "#f8dbac");
-  sky.addColorStop(0.65, dusk ? "#d6d7bd" : "#f8edcb");
+  sky.addColorStop(0, blend("#f8dbac", "#b6cbd1"));
+  sky.addColorStop(0.65, blend("#f8edcb", "#d6d7bd"));
   sky.addColorStop(1, "#bacdb2");
   c.fillStyle = sky;
   c.fillRect(0, 0, w, h);
   const sunX = w * 0.77;
-  ellipse(c, sunX, 148, 70, 70, dusk ? "#eef3dd" : "#fff4d6");
+  ellipse(c, sunX, 148, 70, 70, blend("#fff4d6", "#eef3dd"));
   ellipse(c, sunX, 148, 89, 89, "#fff6df20");
 
   for (let layer = 0; layer < 3; layer++) {
@@ -272,9 +286,9 @@ export function drawFlight(
     const y = 538 + (((i % 3) + 3) % 3) * 24;
     c.fillStyle = "#447e6d";
     c.beginPath();
-    c.moveTo(x - 16, y + 110);
+    c.moveTo(x - 16, FLIGHT_GROUND + 8);
     c.lineTo(x + 7, y - 42);
-    c.lineTo(x + 22, y + 110);
+    c.lineTo(x + 22, FLIGHT_GROUND + 8);
     c.fill();
     for (const side of [-1, 1]) {
       c.beginPath();

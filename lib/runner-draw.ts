@@ -1,4 +1,5 @@
 import { RUNNER_GROUND, RUNNER_HEIGHT, type Runner } from "./runner";
+import { runnerPalette } from "./runner-palette";
 
 export function drawRunner(
   c: CanvasRenderingContext2D,
@@ -7,28 +8,24 @@ export function drawRunner(
 ) {
   const w = run.width,
     g = RUNNER_GROUND;
-  const night = Math.floor(run.score / 500) % 2 === 1;
-  c.fillStyle = night ? "#2d4546" : "#f5dfb5";
+  const palette = runnerPalette(run.distance);
+  c.fillStyle = palette.sky;
   c.fillRect(0, 0, w, RUNNER_HEIGHT);
-  c.fillStyle = night ? "#f4edcd" : "#fff3d2";
+  c.fillStyle = palette.sun;
   c.beginPath();
   c.arc(w * 0.8, 90, 36, 0, Math.PI * 2);
   c.fill();
-  if (night) {
-    c.fillStyle = "#2d4546";
+  if (palette.night > 0) {
+    c.globalAlpha = palette.night;
+    c.fillStyle = palette.sky;
     c.beginPath();
     c.arc(w * 0.8 - 13, 80, 33, 0, Math.PI * 2);
     c.fill();
+    c.globalAlpha = 1;
   }
   for (let layer = 0; layer < 2; layer++) {
     const scroll = run.distance * (layer ? 0.18 : 0.07);
-    c.fillStyle = night
-      ? layer
-        ? "#486358"
-        : "#3c5652"
-      : layer
-        ? "#b7c29b"
-        : "#d3d1aa";
+    c.fillStyle = layer ? palette.nearHill : palette.farHill;
     c.beginPath();
     c.moveTo(-300, g);
     for (
@@ -44,7 +41,7 @@ export function drawRunner(
     c.closePath();
     c.fill();
   }
-  c.fillStyle = night ? "#d4decb55" : "#fff6dfaa";
+  c.fillStyle = palette.cloud;
   const cloudScroll = run.distance * 0.1;
   for (
     let i = Math.floor(cloudScroll / 290) - 1;
@@ -57,11 +54,11 @@ export function drawRunner(
     c.fillRect(x + 15, y - 10, 40, 10);
     c.fillRect(x + 28, y - 17, 19, 7);
   }
-  c.fillStyle = night ? "#233a32" : "#778e67";
+  c.fillStyle = palette.ground;
   c.fillRect(0, g, w, 88);
-  c.fillStyle = night ? "#77967a" : "#c9d6a7";
+  c.fillStyle = palette.grass;
   c.fillRect(0, g, w, 3);
-  c.fillStyle = night ? "#5f7b61" : "#566f51";
+  c.fillStyle = palette.detail;
   const groundScroll = run.distance % 100;
   for (let x = -100; x < w + 100; x += 100) {
     c.fillRect(x - groundScroll, g + 18, 20, 3);

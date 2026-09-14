@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createRunner,
@@ -12,8 +11,12 @@ import {
   type Runner,
 } from "../../lib/runner";
 import { drawRunner } from "../../lib/runner-draw";
+import { runnerPalette } from "../../lib/runner-palette";
 import { Chiptune } from "../../lib/music";
 import styles from "./runner.module.css";
+import GameShell from "../game-shell";
+import PocketControls from "../pocket-controls";
+import type { ArcadeResult } from "../../lib/leaderboard";
 
 function snapshot(run: Runner) {
   return {
@@ -31,9 +34,10 @@ export default function Dash() {
   const bestRef = useRef(0);
   const mutedRef = useRef(false);
   const restartAt = useRef(0);
-  const duckPointers = useRef(new Set<number>());
+  const touchDuck = useRef(false);
   const keyboardDuck = useRef(false);
   const [hud, setHud] = useState(() => snapshot(run.current));
+  const [result, setResult] = useState<ArcadeResult | null>(null);
   const [best, setBest] = useState(0);
   const [muted, setMuted] = useState(false);
   const [storageUnavailable, setStorageUnavailable] = useState(false);
@@ -45,7 +49,7 @@ export default function Dash() {
   }, []);
 
   const releaseDuck = useCallback(() => {
-    duckPointers.current.clear();
+    touchDuck.current = false;
     keyboardDuck.current = false;
     duckRunner(run.current, false);
   }, []);
@@ -55,6 +59,7 @@ export default function Dash() {
     if (current.phase === "over" && performance.now() < restartAt.current)
       return;
     if (current.phase === "ready" || current.phase === "over") {
+      setResult(null);
       releaseDuck();
       run.current = createRunner(
         current.width,
@@ -121,6 +126,7 @@ export default function Dash() {
       tickRunner(current, (now - previous) / 1000);
       previous = now;
       if (wasPlaying && current.phase === "over") {
+        setResult({ id: crypto.randomUUID(), score: current.score });
         music.current?.pause();
         releaseDuck();
         restartAt.current = now + 450;
@@ -141,8 +147,7 @@ export default function Dash() {
       }
       const dpr = Math.min(devicePixelRatio || 1, 2);
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.fillStyle =
-        Math.floor(current.score / 500) % 2 ? "#2d4546" : "#f5dfb5";
+      context.fillStyle = runnerPalette(current.distance).sky;
       context.fillRect(0, 0, cssWidth, cssHeight);
       const scale = Math.min(cssWidth / current.width, cssHeight / 420);
       context.translate(
@@ -176,7 +181,7 @@ export default function Dash() {
     const keyup = (event: KeyboardEvent) => {
       if (["ArrowDown", "KeyS"].includes(event.code)) {
         keyboardDuck.current = false;
-        duckRunner(run.current, duckPointers.current.size > 0);
+        duckRunner(run.current, touchDuck.current);
       }
     };
     const hidden = () => {
@@ -211,40 +216,37 @@ export default function Dash() {
   }
 
   return (
-    <main className={styles.shell}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.back} aria-label="Back to the arcade">
-          ← <span>THE ARCADE</span>
-        </Link>
-        <div className={styles.brand}>
-          <span aria-hidden="true">🐯</span> TWISWUA <strong>DASH</strong>
-        </div>
-        <div className={styles.headerActions}>
-          <button
-            onClick={toggleMusic}
-            aria-label={muted ? "Enable music" : "Mute music"}
-            aria-pressed={!muted}
-          >
-            ♫
-          </button>
-          <button
-            onClick={togglePause}
-            disabled={hud.phase === "ready" || hud.phase === "over"}
-            aria-label={hud.phase === "paused" ? "Resume game" : "Pause game"}
-          >
-            {hud.phase === "paused" ? "▷" : "Ⅱ"}
-          </button>
-        </div>
-      </header>
-      <div className={styles.strip}>
-        <span>● SUNSET TRAIL / ENDLESS RUNNER</span>
-        <span>NO FINISH LINE. JUST ONE MORE TRY.</span>
-      </div>
+    <GameShell
+      game="dash"
+      phase={hud.phase}
+      muted={muted}
+      result={result}
+      onMusic={toggleMusic}
+      onPause={togglePause}
+      status="SUNSET TRAIL / ENDLESS RUNNER"
+      statusRight={`BEST ${best} · ${hud.speed.toFixed(2)}× PACE`}
+      hint="Spacebar to jump · Hold S to crouch · P pause"
+      controls={
+        <PocketControls
+          phase={hud.phase}
+          aLabel="JUMP"
+          bLabel="CROUCH"
+          hint="Space to jump. Hold S to crouch. On mobile: A / B."
+          onA={action}
+          onHoldB={(down) => {
+            touchDuck.current = down;
+            duckRunner(run.current, down || keyboardDuck.current);
+          }}
+          onStart={action}
+          onPause={togglePause}
+        />
+      }
+    >
       <section className={styles.stage} aria-label="Dash game">
         <canvas
           ref={canvasRef}
           tabIndex={0}
-          aria-label="Runner arena. Space or up arrow to jump. Hold down arrow to duck. P to pause."
+          aria-label="Runner arena. Spacebar to jump. Hold S to crouch. P to pause."
           onPointerDown={(event) => {
             if (event.button !== 0) return;
             event.preventDefault();
@@ -331,7 +333,7 @@ export default function Dash() {
               </button>
               <small>
                 {hud.phase === "ready"
-                  ? "SPACE / ↑ TO JUMP · HOLD ↓ TO DUCK"
+                  ? "SPACEBAR TO JUMP · HOLD S TO CROUCH"
                   : hud.phase === "paused"
                     ? "P TO RESUME"
                     : "A NEW RUN. A NEW PERSONAL BEST?"}
@@ -339,90 +341,12 @@ export default function Dash() {
             </div>
           </div>
         )}
-        <div className={styles.screenFooter}>
-          <span>TW / 03</span>
-          <span>
-            {hud.phase === "playing"
-              ? `${hud.speed.toFixed(2)}× PACE`
-              : "THE SUNSET TRAIL"}
-          </span>
-        </div>
-      </section>
-      <section className={styles.controls} aria-label="Runner controls">
-        <div className={styles.controlNote}>
-          <strong>FOLLOW THE TRAIL.</strong>
-          <span>Space / ↑ jump · ↓ duck · P pause</span>
-        </div>
-        <div className={styles.touchControls}>
-          <button
-            className={styles.duck}
-            disabled={hud.phase !== "playing"}
-            onPointerDown={(event) => {
-              if (event.button !== 0) return;
-              event.preventDefault();
-              event.currentTarget.setPointerCapture(event.pointerId);
-              duckPointers.current.add(event.pointerId);
-              duckRunner(run.current, true);
-            }}
-            onPointerUp={(event) => {
-              duckPointers.current.delete(event.pointerId);
-              duckRunner(
-                run.current,
-                keyboardDuck.current || duckPointers.current.size > 0,
-              );
-            }}
-            onPointerCancel={(event) => {
-              duckPointers.current.delete(event.pointerId);
-              duckRunner(
-                run.current,
-                keyboardDuck.current || duckPointers.current.size > 0,
-              );
-            }}
-            onLostPointerCapture={(event) => {
-              duckPointers.current.delete(event.pointerId);
-              duckRunner(
-                run.current,
-                keyboardDuck.current || duckPointers.current.size > 0,
-              );
-            }}
-            onKeyDown={(event) => {
-              if (["Space", "Enter"].includes(event.code)) {
-                event.preventDefault();
-                duckRunner(run.current, true);
-              }
-            }}
-            onKeyUp={() => duckRunner(run.current, false)}
-            onBlur={() => duckRunner(run.current, false)}
-          >
-            <span>↓</span> DUCK <small>HOLD</small>
-          </button>
-          <button
-            className={styles.jump}
-            onClick={(event) => {
-              action();
-              event.currentTarget.blur();
-              canvasRef.current?.focus({ preventScroll: true });
-            }}
-          >
-            <span>↑</span>{" "}
-            {hud.phase === "playing"
-              ? "JUMP"
-              : hud.phase === "paused"
-                ? "RESUME"
-                : "START"}
-            <small>TAP</small>
-          </button>
-        </div>
-        <div className={styles.pace}>
-          <strong>{hud.cleared}</strong>
-          <span>OBSTACLES CLEARED</span>
-        </div>
       </section>
       {storageUnavailable && (
         <p className={styles.storage} role="status">
           Scores can’t be saved in this browser session.
         </p>
       )}
-    </main>
+    </GameShell>
   );
 }

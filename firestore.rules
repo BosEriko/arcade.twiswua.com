@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /arcadeLeaderboards/{game} {
+      function supported() {
+        return game in ['survival', 'flight', 'dash'];
+      }
+      function validSubmission() {
+        let next = request.resource.data;
+        let entry = next.entries[next.lastSubmission];
+        return request.auth != null
+          && next.keys().hasOnly(['entries', 'lastSubmission', 'dropped', 'updatedAt'])
+          && next.entries is map && next.entries.size() >= 1 && next.entries.size() <= 10
+          && next.lastSubmission is string && next.lastSubmission.matches('^[A-Za-z0-9_-]{16,80}$')
+          && next.dropped is string && next.updatedAt == request.time
+          && entry.keys().hasOnly(['initials', 'score', 'uid', 'createdAt'])
+          && entry.initials is string && entry.initials.matches('^[A-Z]{3}$')
+          && entry.score is int && entry.score > 0 && entry.score <= 999999999
+          && entry.uid == request.auth.uid && entry.createdAt == request.time;
+      }
+      function noLower(entries, keys, index, score) {
+        return keys.size() <= index || entries[keys[index]].score >= score;
+      }
+      function replacesLowest() {
+        let old = resource.data.entries;
+        let next = request.resource.data;
+        let keys = old.keys();
+        let cutoff = old[next.dropped].score;
+        return old.size() == 10 && next.entries.size() == 10
+          && next.entries.diff(old).removedKeys() == [next.dropped].toSet()
+          && next.entries[next.lastSubmission].score > cutoff
+          && noLower(old, keys, 0, cutoff) && noLower(old, keys, 1, cutoff)
+          && noLower(old, keys, 2, cutoff) && noLower(old, keys, 3, cutoff)
+          && noLower(old, keys, 4, cutoff) && noLower(old, keys, 5, cutoff)
+          && noLower(old, keys, 6, cutoff) && noLower(old, keys, 7, cutoff)
+          && noLower(old, keys, 8, cutoff) && noLower(old, keys, 9, cutoff);
+      }
+      allow get: if supported();
+      allow create: if supported() && validSubmission()
+        && request.resource.data.entries.size() == 1 && request.resource.data.dropped == '';
+      allow update: if supported() && validSubmission()
+        && request.resource.data.entries.diff(resource.data.entries).changedKeys().size() == 0
+        && request.resource.data.entries.diff(resource.data.entries).addedKeys() == [request.resource.data.lastSubmission].toSet()
+        && ((resource.data.entries.size() < 10
+          && request.resource.data.entries.size() == resource.data.entries.size() + 1
+          && request.resource.data.entries.diff(resource.data.entries).removedKeys().size() == 0
+          && request.resource.data.dropped == '') || replacesLowest());
+      allow delete, list: if false;
+    }
+  }
+}

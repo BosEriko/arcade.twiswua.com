@@ -1,10 +1,11 @@
-name: Deploy Realtime Database rules
+name: Deploy Firebase rules
 
 on:
   push:
     branches: [main]
     paths:
       - database.rules.json
+      - firestore.rules
       - firebase.json
       - .github/workflows/deploy-database-rules.yml
 
@@ -21,6 +22,6 @@ jobs:
         with:
           node-version: 22
 
-      - run: npx --yes firebase-tools deploy --only database --project twiswua-com --non-interactive --token "$FIREBASE_TOKEN"
+      - run: npx --yes firebase-tools deploy --only database,firestore:rules --project twiswua-com --non-interactive --token "$FIREBASE_TOKEN"
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

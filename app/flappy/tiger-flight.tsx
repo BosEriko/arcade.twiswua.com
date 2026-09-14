@@ -18,6 +18,9 @@ import {
 import { drawFlight } from "../../lib/flight-draw";
 import { FlightAudio } from "../../lib/flight-audio";
 import styles from "./tiger-flight.module.css";
+import GameShell from "../game-shell";
+import PocketControls from "../pocket-controls";
+import type { ArcadeResult } from "../../lib/leaderboard";
 
 function snapshot(run: Flight) {
   return {
@@ -44,6 +47,7 @@ export default function TwisWuaFlight() {
   const mutedRef = useRef(false);
   const restartAt = useRef(0);
   const [hud, setHud] = useState(() => snapshot(runRef.current));
+  const [result, setResult] = useState<ArcadeResult | null>(null);
   const [best, setBest] = useState(0);
   const [muted, setMuted] = useState(false);
   const [storageUnavailable, setStorageUnavailable] = useState(false);
@@ -65,6 +69,7 @@ export default function TwisWuaFlight() {
     if (current.phase === "over" && performance.now() < restartAt.current)
       return;
     if (current.phase === "ready" || current.phase === "over") {
+      setResult(null);
       previousBest.current = bestRef.current;
       runRef.current = createFlight(
         current.width,
@@ -131,6 +136,7 @@ export default function TwisWuaFlight() {
       for (const event of run.events) audioRef.current?.sound(event);
       run.events = [];
       if (before === "playing" && run.phase === "over") {
+        setResult({ id: crypto.randomUUID(), score: run.score });
         restartAt.current = now + 450;
         audioRef.current?.stopMusic();
         bestRef.current = Math.max(bestRef.current, run.score);
@@ -203,56 +209,32 @@ export default function TwisWuaFlight() {
   const playing = hud.phase === "playing";
   const over = hud.phase === "over";
   const ready = hud.phase === "ready";
-  const milestone = hud.gates < 5 ? 5 : hud.gates < 15 ? 15 : 30;
   const isRecord = over && hud.score > previousBest.current;
 
   return (
-    <main className={styles.shell}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.back} aria-label="Back to the arcade">
-          <span aria-hidden="true">←</span> <span>ARCADE ROOM</span>
-        </Link>
-        <div className={styles.brand}>
-          <span aria-hidden="true">🐯</span>
-          <div>
-            TWISWUA <strong>FLIGHT</strong>
-            <small>THE SKY IS NOT THE LIMIT.</small>
-          </div>
-        </div>
-        <div className={styles.headerRight}>
-          <button
-            className={styles.iconButton}
-            onClick={toggleMusic}
-            aria-label={muted ? "Turn sound on" : "Mute sound"}
-            aria-pressed={!muted}
-          >
-            <span aria-hidden="true">{muted ? "♪" : "♫"}</span>
-            <span className={styles.soundLabel}>{muted ? "OFF" : "ON"}</span>
-          </button>
-          <button
-            className={styles.iconButton}
-            onClick={togglePause}
-            disabled={ready || over}
-            aria-label={
-              hud.phase === "paused" ? "Resume flight" : "Pause flight"
-            }
-          >
-            <span aria-hidden="true">{hud.phase === "paused" ? "▷" : "Ⅱ"}</span>
-          </button>
-        </div>
-      </header>
-
-      <div className={styles.expeditionBar}>
-        <span>
-          <i /> ENDLESS EXPEDITION
-        </span>
-        <span>
-          01 — {hud.gates >= 15 ? "THE MISTY HIGHLANDS" : "THE SUNLIT CANOPY"}
-        </span>
-        <span className={styles.bestLabel}>
-          PERSONAL BEST <b>{String(best).padStart(2, "0")}</b>
-        </span>
-      </div>
+    <GameShell
+      game="flight"
+      phase={hud.phase}
+      muted={muted}
+      result={result}
+      onMusic={toggleMusic}
+      onPause={togglePause}
+      status={hud.gates >= 15 ? "THE MISTY HIGHLANDS" : "THE SUNLIT CANOPY"}
+      statusRight={`BEST ${best} · ${hud.gates} GATES`}
+      hint="Space / click to flap · P pause"
+      controls={
+        <PocketControls
+          phase={hud.phase}
+          aLabel="FLAP"
+          bLabel="PAUSE"
+          hint="A to flap. B to pause. Chase the stars."
+          onA={action}
+          onB={togglePause}
+          onStart={action}
+          onPause={togglePause}
+        />
+      }
+    >
       <section
         ref={stageRef}
         className={styles.game}
@@ -429,60 +411,11 @@ export default function TwisWuaFlight() {
         </div>
       </section>
 
-      <footer className={styles.controls}>
-        <div className={styles.controlTip}>
-          <span className={styles.keycap}>↑</span>
-          <div>
-            <strong>ONE TAP. ONE FLAP.</strong>
-            <span>
-              Click, tap, or press <kbd>SPACE</kbd>
-            </span>
-          </div>
-        </div>
-        <div className={styles.medalProgress}>
-          <span>
-            {hud.gates >= 30
-              ? "GOLD WINGS EARNED"
-              : `NEXT WINGS · ${hud.gates} / ${milestone} GATES`}
-          </span>
-          <div>
-            <i
-              style={{
-                width: `${Math.min(100, (hud.gates / milestone) * 100)}%`,
-              }}
-            />
-          </div>
-        </div>
-        <button
-          className={styles.flapButton}
-          onPointerDown={(event) => {
-            event.preventDefault();
-            action();
-          }}
-          onClick={(event) => {
-            if (event.detail === 0) action();
-          }}
-          aria-label={
-            playing
-              ? "Flap wings"
-              : hud.phase === "paused"
-                ? "Resume flight with flap"
-                : "Start flight"
-          }
-        >
-          FLAP <span aria-hidden="true">↑</span>
-        </button>
-        <span className={styles.desktopNote}>
-          CHASE STARS.
-          <br />
-          <b>NOT THE GROUND.</b>
-        </span>
-      </footer>
       {storageUnavailable && (
         <p className={styles.storageNotice} role="status">
           Scores can’t be saved in this browser. You can still play.
         </p>
       )}
-    </main>
+    </GameShell>
   );
 }
