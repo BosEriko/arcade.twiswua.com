@@ -62,6 +62,22 @@ export default function Game({
     if (run.current.joystick) moveJoystick(run.current, 0, 0);
   }
 
+  function finishRun() {
+    const state = run.current;
+    setResult({ id: crypto.randomUUID(), score: state.kills });
+    const next = {
+      best: Math.max(recordRef.current.best, state.wave),
+      runs: recordRef.current.runs + 1,
+    };
+    recordRef.current = next;
+    setRecord(next);
+    try {
+      localStorage.setItem("tiger-tide-v1", JSON.stringify(next));
+    } catch {
+      setStorageUnavailable(true);
+    }
+  }
+
   useEffect(() => {
     if (help) helpDialog.current?.showModal();
     else helpDialog.current?.close();
@@ -101,18 +117,7 @@ export default function Game({
         music.current?.pause();
       }
       if (state.phase === "over" && previous !== "over") {
-        setResult({ id: crypto.randomUUID(), score: state.kills });
-        const next = {
-          best: Math.max(recordRef.current.best, state.wave),
-          runs: recordRef.current.runs + 1,
-        };
-        recordRef.current = next;
-        setRecord(next);
-        try {
-          localStorage.setItem("tiger-tide-v1", JSON.stringify(next));
-        } catch {
-          setStorageUnavailable(true);
-        }
+        finishRun();
       }
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
       if (element.width !== WIDTH * ratio) {
@@ -245,6 +250,15 @@ export default function Game({
     playMusic();
     sync();
     canvas.current?.focus({ preventScroll: true });
+  }
+  function endRun() {
+    if (run.current.phase !== "upgrade") return;
+    run.current.hp = 0;
+    run.current.phase = "over";
+    stopMovement();
+    music.current?.pause();
+    finishRun();
+    sync();
   }
   const phase = hud.phase;
   return (
@@ -533,6 +547,11 @@ export default function Game({
                         ? "Back to the wild"
                         : "One more run"}
                     <span>↗</span>
+                  </button>
+                )}
+                {phase === "upgrade" && (
+                  <button type="button" className="end-run-button" onClick={endRun}>
+                    End Run
                   </button>
                 )}
                 <small className="modal-hint">

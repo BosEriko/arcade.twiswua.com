@@ -593,6 +593,16 @@ footer span span {
   display: flex;
   gap: 10px;
 }
+.end-run-button {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
 .upgrade-options button {
   width: 155px;
   background: #f5f3e6;
