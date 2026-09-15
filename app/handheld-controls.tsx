@@ -7,6 +7,7 @@ import styles from "./handheld-controls.module.css";
 type Props = {
   menu?: boolean;
   selecting?: boolean;
+  startWithA?: boolean;
   dpad?: boolean;
   aLabel?: string;
   bLabel?: string;
@@ -24,6 +25,7 @@ type Props = {
 export default function HandheldControls({
   menu = false,
   selecting = false,
+  startWithA = false,
   dpad = false,
   aLabel = "Dash",
   bLabel = "Roar",
@@ -40,6 +42,9 @@ export default function HandheldControls({
   const pointer = useRef<number | null>(null);
   const [stick, setStick] = useState({ x: 0, y: 0 });
   const playing = menu || selecting || phase === "playing";
+  const aStartsRun = startWithA && ["ready", "over", "paused"].includes(phase);
+  const actionALabel = aStartsRun ? phase === "paused" ? "Resume" : "Start" : aLabel;
+  const actionA = aStartsRun ? phase === "paused" ? onPause : onStart : onDash;
 
   useEffect(() => {
     if (!playing) {
@@ -201,14 +206,14 @@ export default function HandheldControls({
           <div className="action-group action-a">
             <button
               className="console-action"
-              aria-label={menu ? "A: Play selected game" : `A: ${aLabel}`}
-              disabled={!playing || dashCooldown > 0}
+              aria-label={menu ? "A: Play selected game" : `A: ${actionALabel}`}
+              disabled={!aStartsRun && (!playing || dashCooldown > 0)}
               onPointerDown={(event) => {
                 event.preventDefault();
-                onDash();
+                actionA();
               }}
               onClick={(event) => {
-                if (event.detail === 0) onDash();
+                if (event.detail === 0) actionA();
               }}
             >
               A
@@ -216,9 +221,9 @@ export default function HandheldControls({
             <span className="control-caption">
               {menu
                 ? "PLAY"
-                : dashCooldown > 0
+                : !aStartsRun && dashCooldown > 0
                   ? `${Math.ceil(dashCooldown)}s`
-                  : aLabel.toUpperCase()}
+                  : actionALabel.toUpperCase()}
             </span>
           </div>
         </div>

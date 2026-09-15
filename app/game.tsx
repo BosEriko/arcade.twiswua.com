@@ -416,10 +416,16 @@ export default function Game({
       controls={
         <HandheldControls
           phase={phase}
+          startWithA
+          dpad={phase === "upgrade"}
           selecting={phase === "upgrade"}
           aLabel={phase === "upgrade" ? "Confirm" : "Dash"}
           bLabel={phase === "upgrade" ? "Next" : "Roar"}
-          hint={phase === "upgrade" ? "Move to select · B next · A or START confirm" : undefined}
+          hint={phase === "upgrade"
+            ? "D-pad to select · B next · A or START confirm"
+            : phase === "ready" || phase === "over"
+              ? "Press A or START to enter the wild."
+              : undefined}
           dashCooldown={phase === "upgrade" ? 0 : hud.dashCooldown}
           roarCooldown={phase === "upgrade" ? 0 : hud.roarCooldown}
           onMove={(x, y) => {
