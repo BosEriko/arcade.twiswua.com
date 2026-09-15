@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { Phase } from "../lib/game";
+import styles from "./handheld-controls.module.css";
 
 type Props = {
   menu?: boolean;
+  dpad?: boolean;
   aLabel?: string;
   bLabel?: string;
   hint?: string;
@@ -20,6 +22,7 @@ type Props = {
 
 export default function HandheldControls({
   menu = false,
+  dpad = false,
   aLabel = "Dash",
   bLabel = "Roar",
   hint,
@@ -73,6 +76,51 @@ export default function HandheldControls({
       </div>
       <div className="control-row">
         <div className="joystick-group">
+          {dpad ? (
+            <div
+              className={styles.dpad}
+              role="group"
+              aria-label="Directional pad"
+              onKeyDown={(event) => {
+                if (!playing) return;
+                const moves: Record<string, [number, number]> = {
+                  ArrowUp: [0, -1], ArrowDown: [0, 1],
+                  ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+                };
+                const step = moves[event.key];
+                if (!step) return;
+                event.preventDefault();
+                if (!event.repeat) {
+                  onMove(...step);
+                  onMove(0, 0);
+                }
+              }}
+            >
+              {[
+                { name: "Up", x: 0, y: -1, rotation: 0 },
+                { name: "Left", x: -1, y: 0, rotation: -90 },
+                { name: "Right", x: 1, y: 0, rotation: 90 },
+                { name: "Down", x: 0, y: 1, rotation: 180 },
+              ].map(({ name, x, y, rotation }) => (
+                <button
+                  key={name}
+                  type="button"
+                  data-direction={name.toLowerCase()}
+                  aria-label={`Move ${name.toLowerCase()}`}
+                  disabled={!playing}
+                  onClick={() => {
+                    onMove(x, y);
+                    onMove(0, 0);
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style={{ transform: `rotate(${rotation}deg)` }}>
+                    <path d="m12 7 7 9H5Z" fill="currentColor" />
+                  </svg>
+                </button>
+              ))}
+              <span className={styles.center} aria-hidden="true" />
+            </div>
+          ) : (
           <button
             className="joystick"
             aria-label={
@@ -121,6 +169,7 @@ export default function HandheldControls({
               <span />
             </span>
           </button>
+          )}
           <span className="control-caption">{menu ? "SELECT" : "MOVE"}</span>
         </div>
         <div className="action-buttons">

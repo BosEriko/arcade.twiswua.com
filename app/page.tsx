@@ -244,6 +244,7 @@ export default function Page() {
       hint="Pick a machine and make yourself at home."
       controls={
         <HandheldControls
+          dpad
           menu
           phase="ready"
           dashCooldown={0}

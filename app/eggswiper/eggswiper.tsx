@@ -89,12 +89,13 @@ export default function Eggswiper() {
       extraActions={<button onClick={restart} aria-label="New nest">↻</button>}
       controls={
         <HandheldControls
+          dpad
           phase={finished ? "over" : nest.phase === "paused" ? "paused" : "playing"}
           dashCooldown={0}
           roarCooldown={0}
           aLabel="Open egg"
           bLabel="Flag"
-          hint="Joystick to select · A opens an egg · B flags a duck"
+          hint="D-pad to select · A opens an egg · B flags a duck"
           onMove={move}
           onDash={() => setNest((current) => openEgg(current, selected))}
           onRoar={() => setNest((current) => flagEgg(current, selected))}

@@ -1,0 +1,48 @@
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: clamp(96px, 28vw, 132px);
+  aspect-ratio: 1;
+  filter: drop-shadow(0 5px 0 #142d25);
+}
+.dpad button {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid #739178;
+  background: #52745e;
+  color: #e9efcf;
+  box-shadow: inset 0 2px #93aa86;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.dpad button[data-direction="up"] {
+  grid-area: 1 / 2;
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+}
+.dpad button[data-direction="left"] {
+  grid-area: 2 / 1;
+  border-right: 0;
+  border-radius: 5px 0 0 5px;
+}
+.dpad button[data-direction="right"] {
+  grid-area: 2 / 3;
+  border-left: 0;
+  border-radius: 0 5px 5px 0;
+}
+.dpad button[data-direction="down"] {
+  grid-area: 3 / 2;
+  border-top: 0;
+  border-radius: 0 0 5px 5px;
+}
+.center {
+  grid-area: 2 / 2;
+  background: #52745e;
+}
+.dpad button:active:not(:disabled) { background: #385643; }
+.dpad button:focus-visible { outline: 2px solid #ecc17e; outline-offset: -3px; }
+.dpad button:disabled { opacity: 0.5; cursor: default; }
+@media (max-height: 500px) { .dpad { width: 96px; } }
