@@ -95,7 +95,7 @@ All three solo games use `app/game-shell.tsx` for their header, score-board butt
 
 Each game has its own public top-10 board: Survival ranks ducks defeated (solo and host-submitted co-op team runs), Flight ranks points, and Dash ranks distance points. A qualifying completed run opens a three-letter A–Z initials selector with up/down arrows. Equal scores keep earlier entries; a tie with tenth place does not replace it. Local personal records remain independent of the shared boards.
 
-Firestore stores one document per game at `arcadeLeaderboards/{survival|flight|dash}`, containing at most ten entries. Each entry includes its Firebase account UID, initials, score, and server timestamp. Signed-in scores use the player's existing Google account. Logged-out submissions use a persistent anonymous account in a separate Firebase app instance, so guest score entry does not sign the player into Survival co-op. The public board displays initials and scores only. Signing in later does not retroactively transfer guest entries.
+Firestore stores one document per game at `arcadeLeaderboards/{survival|flight|dash|eggswiper}`, containing at most ten entries. Each entry includes its Firebase account UID, initials, score, and server timestamp. Signed-in scores use the player's existing Google account. Logged-out submissions use a persistent anonymous account in a separate Firebase app instance, so guest score entry does not sign the player into Survival co-op. The public board displays initials and scores only. Signing in later does not retroactively transfer guest entries.
 
 ### Enable production high scores
 

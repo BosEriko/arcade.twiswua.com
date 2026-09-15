@@ -8,6 +8,14 @@ import styles from "./hub.module.css";
 
 const games = [
   {
+    href: "/eggswiper",
+    name: "Eggswiper",
+    genre: "EGG-HUNTING PUZZLE",
+    description: "Crack the eggs. Dodge the ducks. Trust your tiger.",
+    instruction: "OPEN · FLAG · OUTSMART",
+    className: styles.eggswiper,
+  },
+  {
     href: "/survival",
     name: "Survival",
     genre: "SURVIVAL ROGUELITE",
@@ -304,10 +312,13 @@ export default function Page() {
                   <small>TWISWUA</small>
                   <strong>{game.name}</strong>
                 </span>
-                <GameArtwork
-                  flight={game.name === "Flight"}
-                  dash={game.name === "Dash"}
-                />
+                {game.name === "Eggswiper" ? (
+                  <div className={styles.eggArtwork} aria-hidden="true">
+                    <span>🥚 🥚 🥚</span><span>🥚 🐯 🥚</span><span>🥚 🦆 🥚</span>
+                  </div>
+                ) : (
+                  <GameArtwork flight={game.name === "Flight"} dash={game.name === "Dash"} />
+                )}
                 <span className={styles.coverCaption}>{game.instruction}</span>
               </button>
             ))}

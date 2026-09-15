@@ -5,6 +5,9 @@ import type { Phase } from "../lib/game";
 
 type Props = {
   menu?: boolean;
+  aLabel?: string;
+  bLabel?: string;
+  hint?: string;
   phase: Phase;
   dashCooldown: number;
   roarCooldown: number;
@@ -17,6 +20,9 @@ type Props = {
 
 export default function HandheldControls({
   menu = false,
+  aLabel = "Dash",
+  bLabel = "Roar",
+  hint,
   phase,
   dashCooldown,
   roarCooldown,
@@ -121,7 +127,7 @@ export default function HandheldControls({
           <div className="action-group action-b">
             <button
               className="console-action"
-              aria-label={menu ? "B: Previous game" : "B: Roar"}
+              aria-label={menu ? "B: Previous game" : `B: ${bLabel}`}
               disabled={!playing || roarCooldown > 0}
               onPointerDown={(event) => {
                 event.preventDefault();
@@ -138,13 +144,13 @@ export default function HandheldControls({
                 ? "PREVIOUS"
                 : roarCooldown > 0
                   ? `${Math.ceil(roarCooldown)}s`
-                  : "ROAR"}
+                  : bLabel.toUpperCase()}
             </span>
           </div>
           <div className="action-group action-a">
             <button
               className="console-action"
-              aria-label={menu ? "A: Play selected game" : "A: Dash"}
+              aria-label={menu ? "A: Play selected game" : `A: ${aLabel}`}
               disabled={!playing || dashCooldown > 0}
               onPointerDown={(event) => {
                 event.preventDefault();
@@ -161,7 +167,7 @@ export default function HandheldControls({
                 ? "PLAY"
                 : dashCooldown > 0
                   ? `${Math.ceil(dashCooldown)}s`
-                  : "DASH"}
+                  : aLabel.toUpperCase()}
             </span>
           </div>
         </div>
@@ -192,13 +198,13 @@ export default function HandheldControls({
         </div>
       </div>
       <p className="console-hint">
-        {menu
+        {hint ?? (menu
           ? "Move to select. Press A or START to play."
           : phase === "ready"
             ? "Press START. Answer the call of the wild."
             : phase === "upgrade"
               ? "Pick your upgrade on the screen above."
-              : "Auto-claws on. Keep your paws moving."}
+              : "Auto-claws on. Keep your paws moving.")}
       </p>
     </section>
   );

@@ -56,7 +56,7 @@ export default function GameShell({
 }: Props) {
   const title = game ? ARCADE_GAMES[game].name : "Arcade Room";
   return (
-    <main className={`${styles.shell} ${game ? "" : styles.menuShell}`}>
+    <main className={`${styles.shell} ${game ? "" : styles.menuShell}`} data-game={game}>
       <header className={styles.header}>
         {game ? (
           <Link href="/" className={styles.back} aria-label="Back to the arcade">

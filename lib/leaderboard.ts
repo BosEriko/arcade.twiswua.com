@@ -1,6 +1,7 @@
 export const LEADERBOARD_LIMIT = 10;
 export const MAX_ARCADE_SCORE = 999999999;
 export const ARCADE_GAMES = {
+  eggswiper: { name: "Eggswiper", unit: "EGGS OPENED", note: "Little eggs. Big secrets." },
   survival: {
     name: "Survival",
     unit: "DUCKS DEFEATED",
