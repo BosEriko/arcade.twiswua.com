@@ -225,7 +225,11 @@ export default function Dash() {
       onPause={togglePause}
       status="SUNSET TRAIL / ENDLESS RUNNER"
       statusRight={`BEST ${best} · ${hud.speed.toFixed(2)}× PACE`}
-      hint="Spacebar to jump · Hold S to crouch · P pause"
+      hint={<>
+        <span><kbd>Space</kbd> Jump</span>
+        <span><kbd>S</kbd> Hold to crouch</span>
+        <span><kbd>P</kbd> Pause</span>
+      </>}
       controls={
         <PocketControls
           phase={hud.phase}

@@ -24,6 +24,7 @@ import { draw } from "../lib/draw";
 import { Chiptune } from "../lib/music";
 import HandheldControls from "./handheld-controls";
 import GameShell from "./game-shell";
+import MouseKey from "./mouse-key";
 import type { ArcadeResult } from "../lib/leaderboard";
 
 const formatTime = (seconds: number) =>
@@ -50,6 +51,8 @@ export default function Game({
   const [result, setResult] = useState<ArcadeResult | null>(null);
   const [help, setHelp] = useState(false);
   const [storageUnavailable, setStorageUnavailable] = useState(false);
+  const [upgradeSelection, setUpgradeSelection] = useState(0);
+  const upgradeDirection = useRef(0);
   const sync = () => setHud({ ...run.current });
 
   function playMusic() {
@@ -115,6 +118,10 @@ export default function Game({
       if (previous === "playing" && state.phase !== "playing") {
         stopMovement();
         music.current?.pause();
+        if (state.phase === "upgrade") {
+          setUpgradeSelection(0);
+          upgradeDirection.current = 0;
+        }
       }
       if (state.phase === "over" && previous !== "over") {
         finishRun();
@@ -260,6 +267,17 @@ export default function Game({
     finishRun();
     sync();
   }
+  function browseUpgrade(offset: number) {
+    if (run.current.phase !== "upgrade") return;
+    const count = run.current.upgradeChoices.length + 1;
+    setUpgradeSelection((current) => (current + offset + count) % count);
+  }
+  function confirmUpgrade() {
+    if (run.current.phase !== "upgrade") return;
+    const choice = run.current.upgradeChoices[upgradeSelection];
+    if (choice) select(choice);
+    else endRun();
+  }
   const phase = hud.phase;
   return (
     <GameShell
@@ -269,7 +287,12 @@ export default function Game({
       result={result}
       status="THE OVERGROWN GLADE"
       statusRight={`WAVE ${hud.wave} · ${hud.kills} DUCKS`}
-      hint="Move with your mouse / WASD · J dash · K roar · P pause"
+      hint={<>
+        <span><kbd>WASD</kbd> / <MouseKey /> Move</span>
+        <span><kbd>J</kbd> Dash</span>
+        <span><kbd>K</kbd> Roar</span>
+        <span><kbd>P</kbd> Pause</span>
+      </>}
       onPause={togglePause}
       onMusic={() => {
         mutedRef.current = !mutedRef.current;
@@ -393,18 +416,31 @@ export default function Game({
       controls={
         <HandheldControls
           phase={phase}
-          dashCooldown={hud.dashCooldown}
-          roarCooldown={hud.roarCooldown}
-          onMove={(x, y) => moveJoystick(run.current, x, y)}
+          selecting={phase === "upgrade"}
+          aLabel={phase === "upgrade" ? "Confirm" : "Dash"}
+          bLabel={phase === "upgrade" ? "Next" : "Roar"}
+          hint={phase === "upgrade" ? "Move to select · B next · A or START confirm" : undefined}
+          dashCooldown={phase === "upgrade" ? 0 : hud.dashCooldown}
+          roarCooldown={phase === "upgrade" ? 0 : hud.roarCooldown}
+          onMove={(x, y) => {
+            if (run.current.phase === "upgrade") {
+              const axis = Math.abs(x) >= Math.abs(y) ? x : y;
+              const direction = Math.abs(axis) < 0.4 ? 0 : Math.sign(axis);
+              if (direction && direction !== upgradeDirection.current) browseUpgrade(direction);
+              upgradeDirection.current = direction;
+            } else moveJoystick(run.current, x, y);
+          }}
           onDash={() => {
+            if (run.current.phase === "upgrade") return confirmUpgrade();
             dash(run.current);
             sync();
           }}
           onRoar={() => {
+            if (run.current.phase === "upgrade") return browseUpgrade(1);
             roar(run.current);
             sync();
           }}
-          onStart={start}
+          onStart={phase === "upgrade" ? confirmUpgrade : start}
           onPause={togglePause}
         />
       }
@@ -525,9 +561,11 @@ export default function Game({
                   <div className="upgrade-options">
                     {hud.upgradeChoices
                       .map((id) => ({ id, ...powerups[id] }))
-                      .map((choice) => (
+                      .map((choice, index) => (
                         <button
                           key={choice.id}
+                          data-selected={upgradeSelection === index}
+                          onFocus={() => setUpgradeSelection(index)}
                           onClick={() => select(choice.id)}
                         >
                           <span>{choice.icon}</span>
@@ -550,7 +588,13 @@ export default function Game({
                   </button>
                 )}
                 {phase === "upgrade" && (
-                  <button type="button" className="end-run-button" onClick={endRun}>
+                  <button
+                    type="button"
+                    className="end-run-button"
+                    data-selected={upgradeSelection === hud.upgradeChoices.length}
+                    onFocus={() => setUpgradeSelection(hud.upgradeChoices.length)}
+                    onClick={endRun}
+                  >
                     End Run
                   </button>
                 )}

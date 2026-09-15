@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import GameShell from "../game-shell";
+import MouseKey from "../mouse-key";
 import HandheldControls from "../handheld-controls";
 import { createNest, openEgg, flagEgg, NEST_SIZE, DUCK_COUNT } from "../../lib/eggswiper";
 import { Chiptune } from "../../lib/music";
@@ -85,7 +86,17 @@ export default function Eggswiper() {
       result={result}
       status="THE SECRET NEST"
       statusRight={`${nest.opened} / ${NEST_SIZE ** 2 - DUCK_COUNT} EGGS OPENED`}
-      hint="Click an egg to open · Right-click or F to flag · Arrow keys to select"
+      hint={<>
+        <span><MouseKey button="left" /> Open egg</span>
+        <span><kbd>F</kbd> / <MouseKey button="right" /> Flag</span>
+        <span>
+          <kbd aria-label="Left arrow">←</kbd>
+          <kbd aria-label="Up arrow">↑</kbd>
+          <kbd aria-label="Down arrow">↓</kbd>
+          <kbd aria-label="Right arrow">→</kbd>
+          Select
+        </span>
+      </>}
       extraActions={<button onClick={restart} aria-label="New nest">↻</button>}
       controls={
         <HandheldControls

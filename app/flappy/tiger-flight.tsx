@@ -1,5 +1,7 @@
 "use client";
 
+import MouseKey from "../mouse-key";
+
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -221,7 +223,10 @@ export default function TwisWuaFlight() {
       onPause={togglePause}
       status={hud.gates >= 15 ? "THE MISTY HIGHLANDS" : "THE SUNLIT CANOPY"}
       statusRight={`BEST ${best} · ${hud.gates} GATES`}
-      hint="Space / click to flap · P pause"
+      hint={<>
+        <span><kbd>Space</kbd> / <MouseKey button="left" /> Flap</span>
+        <span><kbd>P</kbd> Pause</span>
+      </>}
       controls={
         <PocketControls
           phase={hud.phase}

@@ -6,6 +6,7 @@ import styles from "./handheld-controls.module.css";
 
 type Props = {
   menu?: boolean;
+  selecting?: boolean;
   dpad?: boolean;
   aLabel?: string;
   bLabel?: string;
@@ -22,6 +23,7 @@ type Props = {
 
 export default function HandheldControls({
   menu = false,
+  selecting = false,
   dpad = false,
   aLabel = "Dash",
   bLabel = "Roar",
@@ -37,7 +39,7 @@ export default function HandheldControls({
 }: Props) {
   const pointer = useRef<number | null>(null);
   const [stick, setStick] = useState({ x: 0, y: 0 });
-  const playing = menu || phase === "playing";
+  const playing = menu || selecting || phase === "playing";
 
   useEffect(() => {
     if (!playing) {
@@ -124,12 +126,12 @@ export default function HandheldControls({
           <button
             className="joystick"
             aria-label={
-              menu
-                ? "Game selection joystick. Drag or use arrow keys to browse."
+              menu || selecting
+                ? "Selection joystick. Drag or use arrow keys to browse."
                 : "Movement joystick. Drag to move; release to stop."
             }
             onKeyDown={(event) => {
-              if (!menu) return;
+              if (!menu && !selecting) return;
               if (
                 ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].includes(event.key)
               ) {
@@ -140,10 +142,10 @@ export default function HandheldControls({
               }
             }}
             onKeyUp={() => {
-              if (menu) onMove(0, 0);
+              if (menu || selecting) onMove(0, 0);
             }}
             onBlur={() => {
-              if (menu) onMove(0, 0);
+              if (menu || selecting) onMove(0, 0);
             }}
             disabled={!playing}
             onPointerDown={(event) => {
@@ -170,7 +172,7 @@ export default function HandheldControls({
             </span>
           </button>
           )}
-          <span className="control-caption">{menu ? "SELECT" : "MOVE"}</span>
+          <span className="control-caption">{menu || selecting ? "SELECT" : "MOVE"}</span>
         </div>
         <div className="action-buttons">
           <div className="action-group action-b">
@@ -232,7 +234,7 @@ export default function HandheldControls({
           </button>
           <button
             onClick={phase === "paused" ? onPause : onStart}
-            disabled={!menu && (playing || phase === "upgrade")}
+            disabled={!menu && !selecting && (playing || phase === "upgrade")}
           >
             <span />
             START

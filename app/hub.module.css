@@ -70,6 +70,9 @@
 .browse:hover {
   background: #38514a;
 }
+.browse:active:not(:disabled) {
+  transform: translateY(-50%);
+}
 .browse:focus-visible {
   outline: 2px solid var(--selection);
   outline-offset: 2px;

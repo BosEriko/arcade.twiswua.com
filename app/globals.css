@@ -603,6 +603,10 @@ footer span span {
   color: inherit;
   cursor: pointer;
 }
+.upgrade-modal button[data-selected="true"] {
+  outline: 3px solid #e6a447;
+  outline-offset: 3px;
+}
 .upgrade-options button {
   width: 155px;
   background: #f5f3e6;

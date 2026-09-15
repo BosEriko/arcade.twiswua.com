@@ -240,13 +240,37 @@
   min-height: 0;
 }
 .desktopHint {
-  font-size: 10px;
-  color: #a7b8aa;
+  font-size: 14px;
+  color: #d5dfcf;
   text-align: center;
   margin: 0;
   height: 100%;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 10px 0;
+}
+.desktopHint > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.desktopHint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border: 1px solid #758b7a;
+  border-radius: 5px;
+  background: #34483f;
+  box-shadow: 0 3px 0 #101c19, inset 0 1px 0 #ffffff1a;
+  color: #fff2d2;
+  font: 700 13px "Courier New", monospace;
 }
 .pocketHint {
   max-width: 150px;

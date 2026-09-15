@@ -16,7 +16,7 @@ type Props = {
   controls: ReactNode;
   status: string;
   statusRight?: ReactNode;
-  hint: string;
+  hint: ReactNode;
   extraActions?: ReactNode;
   sidebar?: ReactNode;
   overlays?: ReactNode;
