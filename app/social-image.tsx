@@ -55,7 +55,7 @@ export function arcadeCard(size: { width: number; height: number }): ReactElemen
   );
 }
 
-export function arcadeMark(size: { width: number; height: number }): ReactElement {
+export function arcadeMark(size: { width: number; height: number }, scale = 0.62): ReactElement {
   return (
     <div
       style={{
@@ -67,7 +67,7 @@ export function arcadeMark(size: { width: number; height: number }): ReactElemen
         background: "#293e31",
       }}
     >
-      <div style={{ fontSize: size.width * 0.62, display: "flex" }}>🐯</div>
+      <div style={{ fontSize: size.width * scale, display: "flex" }}>🐯</div>
     </div>
   );
 }

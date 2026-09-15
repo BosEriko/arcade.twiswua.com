@@ -13,6 +13,14 @@ npm run dev
 
 Open http://localhost:3000.
 
+## Install and play offline
+
+The production site is a Progressive Web App. Use your browser's install action, or Safari's Share → Add to Home Screen on iPhone/iPad. The installed app supports both Pocket portrait and Advance landscape layouts.
+
+After the initial download finishes while online, the homepage and all four solo games are available offline. Local personal records continue to save on the device. Shared high scores, sign-in, and Survival co-op require an internet connection. An offline fallback appears for pages that have not been downloaded.
+
+Service workers register only in production. Verify locally with `npm run build` followed by `npm run start`; localhost supports service workers without HTTPS. Production hosting must use HTTPS. Updates do not force-reload an active game: close all app windows and reopen to activate a waiting service worker. Bump the cache version in `public/sw.js` when changing its caching behavior.
+
 ## Dash
 
 Choose the third arcade cabinet or open `/runner` for a tiger endless runner inspired by Chrome's dinosaur game. Press Space, W, or ↑ to jump over cacti and logs. Hold S or ↓ to duck beneath birds; ducking in the air brings you down faster. On touchscreens, use the Jump and Duck buttons. P or Escape pauses; switching tabs also pauses automatically.

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Pwa from "./pwa";
 import "./globals.css";
 
 const title = "TwisWua's Arcade Room";
@@ -8,6 +9,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://arcade.twiswua.com"),
   title,
   description,
+  applicationName: "TwisWua Arcade",
+  appleWebApp: {
+    capable: true,
+    title: "TwisWua Arcade",
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     title,
     description,
@@ -27,7 +34,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#d8dbc4",
+  themeColor: "#1b2b2b",
 };
 
 export default function RootLayout({
@@ -35,7 +42,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}<Pwa /></body>
     </html>
   );
 }
