@@ -76,8 +76,8 @@
   --cover: #152f42;
 }
 .dash {
-  --accent: #374d3b;
-  --cover: #ebd2a0;
+  --accent: #f0d9a5;
+  --cover: #374d3b;
 }
 .game {
   position: relative;
@@ -273,7 +273,5 @@
 }
 
 .eggswiper { --accent: #f8edc4; --cover: #5b754f; }
-.eggArtwork { display: grid; place-content: center; gap: 8px; flex: 1; min-height: 0; font-size: clamp(20px, 3vw, 40px); }
-.eggArtwork span { white-space: nowrap; }
 .eggswiper .coverTitle strong { font-size: clamp(20px, 3vw, 37px); }
-@media (max-width: 760px) { .eggArtwork { font-size: 18px; gap: 2px; } .eggswiper .coverTitle strong { font-size: 20px; } }
+@media (max-width: 760px) { .eggswiper .coverTitle strong { font-size: 20px; } }

@@ -85,7 +85,11 @@ function PixelDuck({ x, y }: { x: number; y: number }) {
   );
 }
 
-function GameArtwork({ flight, dash }: { flight: boolean; dash: boolean }) {
+function GameArtwork({ flight, dash, eggs }: {
+  flight: boolean;
+  dash: boolean;
+  eggs: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 320 190"
@@ -99,7 +103,37 @@ function GameArtwork({ flight, dash }: { flight: boolean; dash: boolean }) {
         d="M0 0h320v18H0zM0 18h20v20H0zm40 0h20v10H40zm52 0h30v16H92zm72 0h16v11h-16zm67 0h32v18h-32zm65 0h24v24h-24Z"
         fill={flight ? "#1a4550" : "#385342"}
       />
-      {dash ? (
+      {eggs ? (
+        <>
+          <path d="M0 0h320v190H0Z" fill="#5b754f" />
+          <path d="M0 0h320v20H0zm0 20h28v25H0zm285 0h35v48h-35Z" fill="#3c5b42" />
+          <path d="M0 145h320v45H0Z" fill="#799064" />
+          <path d="M0 173h320v17H0Z" fill="#425f43" />
+          <path d="M87 23h170v133H87Z" fill="#354e3b" />
+          <path d="M91 27h162v125H91Z" fill="#a5b184" />
+          {[0, 1, 2, 3, 4, 5].map((cell) => (
+            <g key={cell} transform={`translate(${98 + (cell % 3) * 50} ${34 + Math.floor(cell / 3) * 57})`}>
+              <path d="M0 0h43v50H0Z" fill={cell === 1 ? "#dce0b9" : "#bbc797"} />
+              <path d="M0 0h43v3H0Z" fill="#e8edc3" />
+              <path d="M0 47h43v3H0Z" fill="#819264" />
+              {cell === 1 ? (
+                <path d="M13 12h15v5h5v9h-5v5H18v5h15v5H12V29h5v-5h10v-7H13Z" fill="#467747" />
+              ) : (
+                <>
+                  <path d="M17 9h9v5h5v8h4v14h-5v5H13v-5H8V22h4v-8h5Z" fill="#faf0ce" />
+                  <path d="M30 22h5v14h-5v5H13v-5h13v-5h4Z" fill="#cecca4" />
+                  <path d="M17 16h5v10h-5Z" fill="#fffaf0" />
+                </>
+              )}
+            </g>
+          ))}
+          <path d="M24 159h59v8H24zm227 7h54v7h-54Z" fill="#344e3b" />
+          <PixelTiger x={41} y={110} />
+          <PixelDuck x={263} y={127} />
+          <path d="M30 60h5v-6h4v6h6v4H30zm235 22h5v-7h4v7h7v4h-16zM9 176h12v3H9zm274 7h18v3h-18Z" fill="#b2c28d" />
+          <path d="M62 81h4v5h5v4h-5v5h-4v-5h-5v-4h5Z" fill="#f4d388" />
+        </>
+      ) : dash ? (
         <>
           <path d="M0 0h320v190H0z" fill="#ebd2a0" />
           <circle cx="259" cy="48" r="25" fill="#fff0c9" />
@@ -182,7 +216,7 @@ function GameArtwork({ flight, dash }: { flight: boolean; dash: boolean }) {
       )}
       <path
         d="M0 183h320v7H0z"
-        fill={dash ? "#3b543d" : flight ? "#102a32" : "#1b2c25"}
+        fill={eggs ? "#354e3b" : dash ? "#3b543d" : flight ? "#102a32" : "#1b2c25"}
       />
     </svg>
   );
@@ -313,13 +347,11 @@ export default function Page() {
                   <small>TWISWUA</small>
                   <strong>{game.name}</strong>
                 </span>
-                {game.name === "Eggswiper" ? (
-                  <div className={styles.eggArtwork} aria-hidden="true">
-                    <span>🥚 🥚 🥚</span><span>🥚 🐯 🥚</span><span>🥚 🦆 🥚</span>
-                  </div>
-                ) : (
-                  <GameArtwork flight={game.name === "Flight"} dash={game.name === "Dash"} />
-                )}
+                <GameArtwork
+                  flight={game.name === "Flight"}
+                  dash={game.name === "Dash"}
+                  eggs={game.name === "Eggswiper"}
+                />
                 <span className={styles.coverCaption}>{game.instruction}</span>
               </button>
             ))}
