@@ -205,8 +205,7 @@
 .play:hover {
   background: #ffffff0d;
 }
-@media (max-width: 760px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 600px) {
+@media (hover: none) and (pointer: coarse) {
   .browse {
     display: none;
   }
@@ -256,7 +255,7 @@
     display: none;
   }
 }
-@media (max-width: 760px) and (max-height: 700px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 700px) {
   .homeScreen {
     padding: 10px 0;
   }
@@ -268,8 +267,7 @@
     font-size: 19px;
   }
 }
-@media (max-width: 760px) and (max-height: 500px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 500px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) {
   .homeScreen {
     padding: 5px 0;
   }
@@ -281,7 +279,7 @@
     padding-block: 9px;
   }
   .game {
-    flex-basis: 105px;
+    flex-basis: clamp(132px, 44dvh, 210px);
   }
   .coverTitle {
     padding-top: 6px;
@@ -302,4 +300,4 @@
 
 .eggswiper { --accent: #f8edc4; --cover: #5b754f; }
 .eggswiper .coverTitle strong { font-size: clamp(20px, 3vw, 37px); }
-@media (max-width: 760px) { .eggswiper .coverTitle strong { font-size: 20px; } }
+@media (hover: none) and (pointer: coarse) { .eggswiper .coverTitle strong { font-size: 20px; } }

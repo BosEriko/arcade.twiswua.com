@@ -191,9 +191,11 @@ export default function Game({
     window.addEventListener("blur", pause);
     document.addEventListener("visibilitychange", visibility);
     const handheld = window.matchMedia(
-      "(max-width: 760px), (pointer: coarse) and (max-width: 1024px) and (max-height: 600px)",
+      "(hover: none) and (pointer: coarse)",
     );
     handheld.addEventListener("change", pause);
+    const orientation = window.matchMedia("(orientation: landscape)");
+    orientation.addEventListener("change", pause);
     return () => {
       cancelAnimationFrame(frame);
       music.current?.dispose();
@@ -202,6 +204,7 @@ export default function Game({
       window.removeEventListener("blur", pause);
       document.removeEventListener("visibilitychange", visibility);
       handheld.removeEventListener("change", pause);
+      orientation.removeEventListener("change", pause);
     };
   }, []);
 

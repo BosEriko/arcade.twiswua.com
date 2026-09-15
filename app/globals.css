@@ -764,13 +764,13 @@ footer span span {
   margin-right: 5px;
 }
 .handheld-controls,
+.console-model-advance,
 .mobile-hud,
 .mobile-hint {
   display: none;
 }
 
-@media (max-width: 760px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 600px) {
+@media (hover: none) and (pointer: coarse) {
   html,
   body {
     width: 100%;
@@ -988,6 +988,7 @@ footer span span {
   }
   .upgrade-options button {
     width: 33.333%;
+    min-width: 0;
     padding: 8px;
   }
   .upgrade-options strong {
@@ -1222,7 +1223,7 @@ footer span span {
     line-height: 1.6;
   }
 }
-@media (max-width: 760px) and (max-height: 700px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 700px) {
   .handheld-controls {
     padding-top: 13px;
     padding-bottom: 7px;
@@ -1274,8 +1275,7 @@ footer span span {
     margin: 6px 0;
   }
 }
-@media (max-width: 760px) and (max-height: 500px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 500px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) {
   .game-column {
     grid-template-rows: 16px minmax(0, 1fr) 23px;
     border-width: 5px;
@@ -1352,14 +1352,22 @@ footer span span {
     min-width: 140px;
   }
   .upgrade-modal {
-    width: auto;
+    display: block;
+    width: 100%;
+    max-width: 440px;
   }
   .upgrade-modal h2 {
     display: none;
   }
   .upgrade-options button {
-    min-width: 95px;
+    min-width: 0;
     padding: 4px 7px;
+  }
+  .end-run-button {
+    margin-top: 8px;
+    min-height: 36px;
+    padding: 6px 14px;
+    font-size: 11px;
   }
   .upgrade-options button > span {
     display: none;
@@ -1404,7 +1412,7 @@ footer span span {
   }
 }
 
-@media (max-width: 760px) {
+@media (hover: none) and (pointer: coarse) {
   .survival-brand {
     font-size: 14px;
     gap: 2px;

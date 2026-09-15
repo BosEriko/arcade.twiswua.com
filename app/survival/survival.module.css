@@ -166,7 +166,7 @@
 .controls {
   display: none;
 }
-@media (max-width: 760px), (pointer: coarse) {
+@media (hover: none) and (pointer: coarse) {
   .page {
     padding: 12px 12px 30px;
   }

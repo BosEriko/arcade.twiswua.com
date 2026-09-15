@@ -344,8 +344,7 @@
   font-size: 9px;
 }
 
-@media (max-width: 760px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 600px) {
+@media (hover: none) and (pointer: coarse) {
   .game {
     border-radius: 8px;
   }
@@ -453,7 +452,7 @@
     bottom: 40px;
   }
 }
-@media (max-width: 760px) and (max-height: 700px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 700px) {
   .readyOverlay {
     padding-bottom: 12%;
   }
@@ -489,8 +488,7 @@
     margin-top: 13px;
   }
 }
-@media (max-width: 760px) and (max-height: 500px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 500px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) {
   .readyOverlay {
     justify-items: start;
     align-items: center;
@@ -566,7 +564,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (hover: none) and (pointer: coarse) {
   .readyOverlay {
     padding: 12px;
     align-items: center;
@@ -626,8 +624,7 @@
     top: 65px;
   }
 }
-@media (max-width: 760px) and (max-height: 500px),
-  (pointer: coarse) and (max-width: 1024px) and (max-height: 500px) {
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) {
   .launchPanel,
   .resultPanel {
     display: flex;

@@ -76,9 +76,9 @@ export default function HandheldControls({
   }
 
   return (
-    <section className="handheld-controls" aria-label="Handheld controller">
+    <section className="handheld-controls" data-controls="directional" aria-label="Handheld controller">
       <div className="console-wordmark">
-        TWISWUA <span>pocket</span>
+        TWISWUA <span className="console-model-pocket">pocket</span><span className="console-model-advance">advance</span>
         <small>8-BIT WILD EDITION</small>
       </div>
       <div className="control-row">
