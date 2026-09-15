@@ -12,6 +12,7 @@ import HighScores from "../high-scores";
 export default function Survival() {
   const online = useRoom();
   const [lobby, setLobby] = useState(false);
+  const [scoreScreen, setScoreScreen] = useState<HTMLElement | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const canvas = useRef<HTMLCanvasElement>(null);
   const { session, input, room, user, connected, code } = online;
@@ -172,6 +173,7 @@ export default function Survival() {
         </a>
         <div className={styles.actions}>
           <HighScores
+            container={scoreScreen}
             game="survival"
             result={
               room && online.host && phase === "over"
@@ -204,7 +206,7 @@ export default function Survival() {
         </div>
       </header>
       {!room ? (
-        <section className={styles.lobby}>
+        <section ref={setScoreScreen} className={styles.lobby}>
           <span className="eyebrow">SURVIVAL / CO-OP</span>
           <h1>
             The wild is better
@@ -308,7 +310,7 @@ export default function Survival() {
               </div>
             ))}
           </section>
-          <div className={styles.arena}>
+          <div ref={setScoreScreen} className={styles.arena}>
             <canvas
               ref={canvas}
               width={WIDTH}

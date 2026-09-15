@@ -21,16 +21,28 @@
 .trigger:hover {
   background: #38514a;
 }
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  container-type: size;
+  background: #142526dc;
+  border-radius: inherit;
+}
 .dialog {
   --ink: #f5eed9;
   --orange: #ecc17e;
-  position: fixed;
-  inset: 0;
-  width: min(460px, calc(100% - 24px));
+  position: relative;
+  width: min(460px, 100%);
   max-width: none;
-  max-height: calc(100dvh - 24px);
+  max-height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
   padding: 24px;
-  margin: auto;
+  margin: 0;
   color: #f5eed9;
   background: #1b2b2b;
   border: 1px solid #8a956b;
@@ -42,11 +54,11 @@
   overflow: auto;
   overscroll-behavior: contain;
 }
-.dialog::backdrop {
-  background: #142526ba;
-  backdrop-filter: blur(5px);
-}
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #1b2b2b;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -282,18 +294,7 @@
 .state .primary {
   margin-top: 20px;
 }
-@media (max-width: 760px) {
-  .trigger {
-    min-width: 30px;
-    min-height: 32px;
-    padding: 0 5px;
-  }
-  .trigger > span:last-child {
-    display: none;
-  }
-  .trigger > span:first-child {
-    font-size: 19px;
-  }
+@container (max-width: 400px) {
   .dialog {
     padding: 18px;
   }
@@ -311,7 +312,7 @@
     font-size: 33px;
   }
 }
-@media (max-height: 650px) {
+@container (max-height: 480px) {
   .dialog {
     padding: 16px;
   }
@@ -338,9 +339,9 @@
     height: 32px;
   }
 }
-@media (max-height: 500px) {
+@container (min-width: 500px) and (max-height: 500px) {
   .dialog {
-    width: min(650px, calc(100% - 24px));
+    width: min(650px, 100%);
     padding: 14px 20px;
   }
   .header h2 {
@@ -441,11 +442,25 @@
   flex-shrink: 0;
   font-size: 9px;
 }
-@media (max-height: 500px) {
+@container (min-width: 500px) and (max-height: 500px) {
   .account {
     padding: 0;
   }
   .account .textButton {
     padding: 5px 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .trigger {
+    min-width: 30px;
+    min-height: 32px;
+    padding: 0 5px;
+  }
+  .trigger > span:last-child {
+    display: none;
+  }
+  .trigger > span:first-child {
+    font-size: 19px;
   }
 }

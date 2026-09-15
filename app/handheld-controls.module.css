@@ -36,6 +36,7 @@
 .dpad button[data-direction="down"] {
   grid-area: 3 / 2;
   border-top: 0;
+  box-shadow: none;
   border-radius: 0 0 5px 5px;
 }
 .center {

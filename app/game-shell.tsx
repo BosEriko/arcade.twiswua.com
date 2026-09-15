@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import HighScores from "./high-scores";
 import {
   ARCADE_GAMES,
@@ -54,6 +54,7 @@ export default function GameShell({
   sidebar,
   overlays,
 }: Props) {
+  const [scoreScreen, setScoreScreen] = useState<HTMLDivElement | null>(null);
   const title = game ? ARCADE_GAMES[game].name : "Arcade Room";
   return (
     <main className={`${styles.shell} ${game ? "" : styles.menuShell}`} data-game={game}>
@@ -76,6 +77,7 @@ export default function GameShell({
           {game && (
             <>
               <HighScores
+                container={scoreScreen}
                 game={game}
                 result={result}
                 onOpen={() => {
@@ -112,7 +114,7 @@ export default function GameShell({
           <div
             className={`${styles.viewport} ${sidebar ? styles.withSidebar : ""}`}
           >
-            <div className={`${styles.screen} ${game ? "" : styles.menuScreen}`}>
+            <div ref={setScoreScreen} className={`${styles.screen} ${game ? "" : styles.menuScreen}`}>
               {children}
             </div>
             {sidebar && <div className={styles.sidebar}>{sidebar}</div>}

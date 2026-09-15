@@ -23,19 +23,20 @@ import styles from "./high-scores.module.css";
 
 export default function HighScores({
   game,
+  container,
   result = null,
   onOpen,
 }: {
   game: ArcadeGame;
+  container: HTMLElement | null;
   result?: ArcadeResult | null;
   onOpen?: () => void;
 }) {
   const titleId = useId();
-  const dialog = useRef<HTMLDialogElement>(null);
+  const dialog = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const request = useRef(0);
   const submitting = useRef(false);
-  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"board" | "entry">("board");
   const [entries, setEntries] = useState<HighScore[]>([]);
@@ -50,7 +51,6 @@ export default function HighScores({
   const metadata = ARCADE_GAMES[game];
 
   useEffect(() => {
-    setMounted(true);
     try {
       const saved = localStorage.getItem("arcade-initials");
       if (saved && validInitials(saved)) setInitials(saved);
@@ -61,9 +61,36 @@ export default function HighScores({
   }, []);
 
   useEffect(() => {
-    if (open) dialog.current?.showModal();
-    else dialog.current?.close();
-  }, [open, mounted]);
+    const panel = dialog.current;
+    if (!open || !container || !panel) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const background: Array<{ element: HTMLElement; inert: boolean }> = [];
+    panel.focus({ preventScroll: true });
+    let current: HTMLElement = panel.parentElement!;
+    while (current.parentElement) {
+      for (const sibling of current.parentElement.children) {
+        if (sibling !== current && sibling instanceof HTMLElement) {
+          background.push({ element: sibling, inert: sibling.inert });
+          sibling.inert = true;
+        }
+      }
+      current = current.parentElement;
+      if (current === document.body) break;
+    }
+    const containFocus = (event: FocusEvent) => {
+      if (event.target instanceof Node && !panel.contains(event.target)) {
+        panel.focus({ preventScroll: true });
+      }
+    };
+    document.addEventListener("focusin", containFocus);
+    return () => {
+      document.removeEventListener("focusin", containFocus);
+      background.forEach(({ element, inert }) => { element.inert = inert; });
+      if (previousFocus?.isConnected && previousFocus !== document.body) {
+        previousFocus.focus({ preventScroll: true });
+      } else trigger.current?.focus({ preventScroll: true });
+    };
+  }, [open, container]);
 
   useEffect(() => {
     const id = ++request.current;
@@ -115,7 +142,6 @@ export default function HighScores({
   function close() {
     if (submitting.current) return;
     setOpen(false);
-    trigger.current?.focus({ preventScroll: true });
   }
 
   function change(index: number, direction: number) {
@@ -177,17 +203,40 @@ export default function HighScores({
         <span aria-hidden="true">♛</span>
         <span>TOP 10</span>
       </button>
-      {mounted &&
+      {open && container &&
         createPortal(
-          <dialog
+          <div className={styles.overlay}>
+          <div
             ref={dialog}
             className={styles.dialog}
+            role="dialog"
+            aria-modal="true"
             aria-labelledby={titleId}
-            onCancel={(event) => {
-              event.preventDefault();
-              close();
+            tabIndex={-1}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              if (event.key === "Escape") {
+                event.preventDefault();
+                close();
+              }
+              if (event.key === "Tab") {
+                const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+                  'button:not(:disabled), input:not(:disabled), a[href], [tabindex="0"]',
+                )).filter((element) => element.getClientRects().length > 0);
+                const first = focusable[0];
+                const last = focusable.at(-1);
+                if (!first || !last) {
+                  event.preventDefault();
+                  event.currentTarget.focus();
+                } else if (event.shiftKey && (document.activeElement === first || document.activeElement === event.currentTarget)) {
+                  event.preventDefault();
+                  last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first.focus();
+                }
+              }
             }}
-            onKeyDown={(event) => event.stopPropagation()}
             onKeyUp={(event) => event.stopPropagation()}
           >
             <header className={styles.header}>
@@ -382,8 +431,9 @@ export default function HighScores({
                 </div>
               </div>
             )}
-          </dialog>,
-          document.body,
+          </div>
+          </div>,
+          container,
         )}
     </>
   );

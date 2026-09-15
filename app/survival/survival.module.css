@@ -51,6 +51,7 @@
   outline-offset: 3px;
 }
 .lobby {
+  position: relative;
   max-width: 680px;
   margin: 60px auto;
   padding: 36px;
