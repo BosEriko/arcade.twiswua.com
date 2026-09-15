@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import HighScores from "./high-scores";
 import {
   ARCADE_GAMES,
@@ -55,6 +56,13 @@ export default function GameShell({
   overlays,
 }: Props) {
   const [scoreScreen, setScoreScreen] = useState<HTMLDivElement | null>(null);
+  const pathname = usePathname();
+  useEffect(() => {
+    if (!game) return;
+    try {
+      localStorage.setItem("arcade-last-played", pathname);
+    } catch {}
+  }, [game, pathname]);
   const title = game ? ARCADE_GAMES[game].name : "Arcade Room";
   return (
     <main className={`${styles.shell} ${game ? "" : styles.menuShell}`} data-game={game}>

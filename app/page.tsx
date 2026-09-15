@@ -6,7 +6,7 @@ import GameShell from "./game-shell";
 import HandheldControls from "./handheld-controls";
 import styles from "./hub.module.css";
 
-const games = [
+const gameCatalog = [
   {
     href: "/eggswiper",
     name: "Eggswiper",
@@ -85,14 +85,16 @@ function PixelDuck({ x, y }: { x: number; y: number }) {
   );
 }
 
-function GameArtwork({ flight, dash, eggs }: {
+function GameArtwork({ flight, dash, eggs, background = false }: {
   flight: boolean;
   dash: boolean;
   eggs: boolean;
+  background?: boolean;
 }) {
   return (
     <svg
       viewBox="0 0 320 190"
+      preserveAspectRatio={background ? "xMidYMid slice" : "xMidYMid meet"}
       className={styles.artwork}
       aria-hidden="true"
       focusable="false"
@@ -224,11 +226,24 @@ function GameArtwork({ flight, dash, eggs }: {
 
 export default function Page() {
   const [selected, setSelected] = useState(0);
+  const [lastPlayed, setLastPlayed] = useState<string | null>(null);
+  const recentGame = gameCatalog.find((game) => game.href === lastPlayed);
+  const games = recentGame
+    ? [recentGame, ...gameCatalog.filter((game) => game !== recentGame)]
+    : gameCatalog;
   const direction = useRef(0);
   const pointerSelection = useRef(0);
   const rail = useRef<HTMLDivElement>(null);
   const tiles = useRef<(HTMLButtonElement | null)[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    try {
+      setLastPlayed(localStorage.getItem("arcade-last-played"));
+    } catch {
+      setLastPlayed(null);
+    }
+  }, []);
 
   useEffect(() => {
     const container = rail.current;
@@ -249,7 +264,7 @@ export default function Page() {
     const observer = new ResizeObserver(reveal);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [selected]);
+  }, [selected, lastPlayed]);
 
   function select(offset: number) {
     setSelected((current) => Math.max(0, Math.min(games.length - 1, current + offset)));
@@ -292,6 +307,22 @@ export default function Page() {
       }
     >
       <section className={styles.homeScreen} aria-label="Choose a game">
+        <div className={styles.backdrop} aria-hidden="true">
+          {gameCatalog.map((game) => (
+            <div
+              key={game.href}
+              className={styles.backdropLayer}
+              data-active={game.href === games[selected].href}
+            >
+              <GameArtwork
+                background
+                flight={game.name === "Flight"}
+                dash={game.name === "Dash"}
+                eggs={game.name === "Eggswiper"}
+              />
+            </div>
+          ))}
+        </div>
         <div className={styles.selection}>
           <p>{games[selected].genre}</p>
           <h1>TwisWua {games[selected].name}</h1>

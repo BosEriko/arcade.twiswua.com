@@ -1,5 +1,7 @@
 .homeScreen {
   --selection: #74e2d2;
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -7,6 +9,25 @@
   padding: clamp(24px, 6vh, 64px) 0;
   color: #f4ecd8;
   overflow: hidden;
+}
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #16191c;
+}
+.backdropLayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+.backdropLayer[data-active="true"] {
+  opacity: 0.25;
+}
+.backdrop .artwork {
+  height: 100%;
 }
 .selection {
   padding: 0 clamp(24px, 5vw, 72px);
@@ -183,6 +204,9 @@
 }
 @media (max-width: 760px),
   (pointer: coarse) and (max-width: 1024px) and (max-height: 600px) {
+  .browse {
+    display: none;
+  }
   .homeScreen {
     padding: 16px 0;
   }
@@ -267,7 +291,8 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .game {
+  .game,
+  .backdropLayer {
     transition: none;
   }
 }
