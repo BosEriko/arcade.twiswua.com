@@ -38,7 +38,7 @@ export default function Eggswiper() {
 
   useEffect(() => {
     if (!muted && nest.phase === "playing" && nest.planted) {
-      music.current ??= new Chiptune();
+      music.current ??= new Chiptune("eggswiper");
       music.current.play();
     } else music.current?.pause();
     return () => music.current?.pause();
@@ -50,6 +50,11 @@ export default function Eggswiper() {
     };
     document.addEventListener("visibilitychange", pause);
     return () => document.removeEventListener("visibilitychange", pause);
+  }, []);
+
+  useEffect(() => () => {
+    music.current?.dispose();
+    music.current = null;
   }, []);
 
   function restart() {

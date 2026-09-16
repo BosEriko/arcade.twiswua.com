@@ -2,7 +2,7 @@ import { Chiptune } from "./music";
 import type { FlightEvent } from "./flight";
 
 export class FlightAudio {
-  private music = new Chiptune();
+  private music = new Chiptune("flight");
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private muted = false;

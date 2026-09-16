@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MenuAudio } from "../lib/menu-audio";
 import GameShell from "./game-shell";
 import HandheldControls from "./handheld-controls";
 import styles from "./hub.module.css";
@@ -231,6 +232,8 @@ export default function Page() {
   const games = recentGame
     ? [recentGame, ...gameCatalog.filter((game) => game !== recentGame)]
     : gameCatalog;
+  const selection = useRef(0);
+  const audio = useRef<MenuAudio | null>(null);
   const direction = useRef(0);
   const pointerSelection = useRef(0);
   const rail = useRef<HTMLDivElement>(null);
@@ -266,8 +269,22 @@ export default function Page() {
     return () => observer.disconnect();
   }, [selected, lastPlayed]);
 
+  useEffect(() => () => {
+    audio.current?.dispose();
+    audio.current = null;
+  }, []);
+
+  function selectGame(index: number) {
+    const next = Math.max(0, Math.min(games.length - 1, index));
+    if (next === selection.current) return;
+    selection.current = next;
+    setSelected(next);
+    audio.current ??= new MenuAudio();
+    audio.current.play();
+  }
+
   function select(offset: number) {
-    setSelected((current) => Math.max(0, Math.min(games.length - 1, current + offset)));
+    selectGame(selection.current + offset);
   }
 
   function move(x: number, y: number) {
@@ -364,14 +381,14 @@ export default function Page() {
                 className={`${styles.game} ${game.className}`}
                 aria-label={`TwisWua ${game.name}`}
                 aria-pressed={index === selected}
-                onFocus={() => setSelected(index)}
+                onFocus={() => selectGame(index)}
                 onPointerDown={() => {
                   pointerSelection.current = selected;
                 }}
                 onClick={(event) => {
                   if (event.detail === 0 || index === pointerSelection.current) {
                     router.push(game.href);
-                  } else setSelected(index);
+                  } else selectGame(index);
                 }}
               >
                 <span className={styles.coverTitle}>

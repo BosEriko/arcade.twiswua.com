@@ -59,7 +59,7 @@ export default function Game({
 
   function playMusic() {
     if (mutedRef.current) return;
-    music.current ??= new Chiptune();
+    music.current ??= new Chiptune("survival");
     music.current.play();
   }
 

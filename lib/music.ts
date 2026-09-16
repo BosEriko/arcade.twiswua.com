@@ -6,6 +6,32 @@ const melody = [
 ];
 const bass = [45, 48, 41, 43, 45, 48, 41, 43];
 
+const tracks = {
+  survival: { melody, bass, tempo: 128, voice: "square", sustain: 0.8, percussion: true },
+  eggswiper: {
+    melody: [72, 76, 79, 0, 76, 74, 72, 0, 74, 77, 81, 0, 79, 77, 74, 0,
+      76, 79, 84, 83, 81, 79, 76, 0, 77, 76, 74, 71, 72, 0, 0, 0],
+    bass: [48, 50, 45, 43], tempo: 104, voice: "triangle", sustain: 0.55, percussion: false,
+  },
+  flight: {
+    melody: [74, 0, 78, 81, 86, 0, 85, 81, 83, 0, 81, 78, 76, 0, 78, 0,
+      79, 0, 83, 86, 88, 86, 83, 81, 78, 0, 76, 73, 74, 0, 0, 0],
+    bass: [50, 47, 43, 45], tempo: 116, voice: "sine", sustain: 1.3, percussion: false,
+  },
+  dash: {
+    melody: [76, 79, 83, 79, 86, 83, 79, 83, 74, 78, 81, 78, 84, 81, 78, 81,
+      72, 76, 79, 76, 83, 79, 76, 79, 74, 78, 81, 83, 86, 83, 81, 78],
+    bass: [40, 38, 36, 38], tempo: 156, voice: "square", sustain: 0.55, percussion: true,
+  },
+} satisfies Record<string, {
+  melody: number[];
+  bass: number[];
+  tempo: number;
+  voice: OscillatorType;
+  sustain: number;
+  percussion: boolean;
+}>;
+
 export class Chiptune {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -13,6 +39,12 @@ export class Chiptune {
   private nextNote = 0;
   private step = 0;
   private active = false;
+
+  private readonly track: keyof typeof tracks;
+
+  constructor(track: keyof typeof tracks) {
+    this.track = track;
+  }
 
   play() {
     this.active = true;
@@ -86,15 +118,16 @@ export class Chiptune {
 
   private schedule() {
     if (!this.context || !this.active) return;
-    const beat = 60 / 128 / 2;
+    const track = tracks[this.track];
+    const beat = 60 / track.tempo / 2;
     this.nextNote = Math.max(this.nextNote, this.context.currentTime);
     while (this.nextNote < this.context.currentTime + 0.12) {
-      const root = bass[Math.floor(this.step / 8) % bass.length];
+      const root = track.bass[Math.floor(this.step / 8) % track.bass.length];
       this.note(
-        melody[this.step % melody.length],
+        track.melody[this.step % track.melody.length],
         this.nextNote,
-        beat * 0.8,
-        "square",
+        beat * track.sustain,
+        track.voice,
         0.2,
       );
       this.note(
@@ -104,12 +137,12 @@ export class Chiptune {
         "triangle",
         0.45,
       );
-      if (this.step % 2 === 0)
+      if (track.percussion && this.step % 2 === 0)
         this.note(33, this.nextNote, 0.055, "triangle", 0.3);
-      if (this.step % 2 === 1)
+      if (track.percussion && this.step % 2 === 1)
         this.note(100, this.nextNote, 0.018, "square", 0.035);
       this.nextNote += beat;
-      this.step = (this.step + 1) % melody.length;
+      this.step = (this.step + 1) % track.melody.length;
     }
   }
 }

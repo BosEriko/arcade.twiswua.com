@@ -46,7 +46,7 @@ export default function Dash() {
 
   const playMusic = useCallback(() => {
     if (mutedRef.current) return;
-    music.current ??= new Chiptune();
+    music.current ??= new Chiptune("dash");
     music.current.play();
   }, []);
 
