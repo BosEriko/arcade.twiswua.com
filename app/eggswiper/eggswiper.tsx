@@ -25,6 +25,12 @@ export default function Eggswiper() {
   const flags = nest.eggs.filter((egg) => egg.flagged).length;
 
   useEffect(() => {
+    if (!finished || nest.opened <= 0) return;
+    const completedRun = { id: crypto.randomUUID(), score: nest.opened };
+    setResult((current) => current ?? completedRun);
+  }, [finished, nest.opened]);
+
+  useEffect(() => {
     if (!nest.planted || nest.phase !== "playing") return;
     const timer = window.setInterval(() => setSeconds((value) => value + 1), 1000);
     return () => window.clearInterval(timer);
@@ -197,7 +203,6 @@ export default function Eggswiper() {
               <strong>{nest.phase === "won" ? "Nest cleared!" : "You found a duck!"} {nest.opened} eggs opened.</strong>
               <div className={styles.endActions}>
                 <button onClick={restart}>New nest ↗</button>
-                {nest.opened > 0 && <button disabled={!!result} onClick={() => setResult({ id: crypto.randomUUID(), score: nest.opened })}>Save score</button>}
               </div>
             </>
           ) : <span>{nest.planted ? "Numbers count ducks in the eight surrounding eggs." : "Open any egg. Your first pick is always safe."}</span>}
