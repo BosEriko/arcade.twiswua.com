@@ -1,6 +1,6 @@
 "use client";
 
-import { ScreenButton, ScreenLayer, ScreenPanel } from "./screen-ui";
+import { GameStartScreen, ScreenButton, ScreenLayer, ScreenPanel } from "./screen-ui";
 
 import {
   useEffect,
@@ -527,31 +527,32 @@ export default function Game({
               </span>
             </div>
           )}
-          {(phase === "ready" ||
-            phase === "paused" ||
+          {phase === "ready" && (
+            <GameStartScreen
+              eyebrow="SMALL PAWS. BIG ENERGY."
+              title={<>Unleash your <em>inner tiger.</em></>}
+              description="An unlikely hero. An unreasonable number of ducks."
+              actionLabel="Enter the wild"
+              onStart={start}
+              hint={<>Move your mouse or joystick. We’ll handle the claws.</>}
+            />
+          )}
+          {(phase === "paused" ||
             phase === "over" ||
             phase === "upgrade") && (
-            <ScreenLayer className={`overlay ${phase === "ready" ? "welcome" : ""}`}>
+            <ScreenLayer className="overlay">
               <ScreenPanel
                 className={`modal ${phase === "upgrade" ? "upgrade-modal" : ""}`}
               >
                 <div className="eyebrow">
-                  {phase === "ready"
-                    ? "SMALL PAWS. BIG ENERGY."
-                    : phase === "paused"
-                      ? "TAKE A BREATHER"
-                      : phase === "over"
-                        ? "THE FLOCK GOT THE LAST QUACK"
-                        : `WAVE ${hud.wave} COMPLETE`}
+                  {phase === "paused"
+                    ? "TAKE A BREATHER"
+                    : phase === "over"
+                      ? "THE FLOCK GOT THE LAST QUACK"
+                      : `WAVE ${hud.wave} COMPLETE`}
                 </div>
                 <h2>
-                  {phase === "ready" ? (
-                    <>
-                      Unleash your
-                      <br />
-                      <em>inner tiger.</em>
-                    </>
-                  ) : phase === "paused" ? (
+                  {phase === "paused" ? (
                     "A moment in the shade."
                   ) : phase === "over" ? (
                     "Every tiger rises again."
@@ -560,12 +561,10 @@ export default function Game({
                   )}
                 </h2>
                 <p>
-                  {phase === "ready"
-                    ? "An unlikely hero. An unreasonable number of ducks."
-                    : phase === "paused"
-                      ? "Your jungle will be right here."
-                      : phase === "over"
-                        ? `${hud.kills} ducks defeated · ${formatTime(hud.time)} survived · Wave ${hud.wave}`
+                  {phase === "paused"
+                    ? "Your jungle will be right here."
+                    : phase === "over"
+                      ? `${hud.kills} ducks defeated · ${formatTime(hud.time)} survived · Wave ${hud.wave}`
                         : "Choose one upgrade for the rest of this run."}
                 </p>
                 {phase === "upgrade" ? (
@@ -590,11 +589,9 @@ export default function Game({
                     className="primary-button"
                     onClick={phase === "paused" ? togglePause : start}
                   >
-                    {phase === "ready"
-                      ? "Enter the wild"
-                      : phase === "paused"
-                        ? "Back to the wild"
-                        : "One more run"}
+                    {phase === "paused"
+                      ? "Back to the wild"
+                      : "One more run"}
                     <span>↗</span>
                   </ScreenButton>
                 )}
@@ -610,16 +607,7 @@ export default function Game({
                   </button>
                 )}
                 <small className="modal-hint">
-                  {phase === "ready" ? (
-                    <>
-                      <span className="desktop-hint">
-                        MOVE YOUR MOUSE. WE’LL HANDLE THE CLAWS.
-                      </span>
-                      <span className="mobile-hint">
-                        JOYSTICK TO MOVE · A DASH · B ROAR
-                      </span>
-                    </>
-                  ) : phase === "over" ? (
+                  {phase === "over" ? (
                     `Legacy bonus: +${Math.min(record.runs, 10) * 5} starting health on your next run`
                   ) : phase === "paused" ? (
                     <>

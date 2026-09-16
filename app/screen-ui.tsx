@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ComponentProps, type ReactNode } from "react";
 import styles from "./screen-ui.module.css";
 
 export function ScreenLayer({ className = "", ...props }: ComponentProps<"div">) {
@@ -21,6 +21,30 @@ export function ScreenActions({ className = "", ...props }: ComponentProps<"foot
 
 export function ScreenButton({ className = "", type = "button", ...props }: ComponentProps<"button">) {
   return <button type={type} className={`${styles.button} ${className}`} {...props} />;
+}
+
+export function GameStartScreen({ eyebrow, title, description, actionLabel, onStart, hint }: {
+  eyebrow: string;
+  title: ReactNode;
+  description: string;
+  actionLabel: string;
+  onStart: () => void;
+  hint: ReactNode;
+}) {
+  const titleId = useId();
+  return (
+    <ScreenLayer className={styles.startScreen}>
+      <ScreenPanel className={styles.startPanel} role="region" aria-labelledby={titleId}>
+        <span className={styles.startEyebrow}>{eyebrow}</span>
+        <h2 id={titleId}>{title}</h2>
+        <p>{description}</p>
+        <ScreenButton className={styles.startButton} onClick={onStart}>
+          {actionLabel}<span aria-hidden="true">↗</span>
+        </ScreenButton>
+        <small className={styles.startHint}>{hint}</small>
+      </ScreenPanel>
+    </ScreenLayer>
+  );
 }
 
 export function ScreenHeader({ id, title, eyebrow, onClose, closeDisabled, closeLabel = "Close screen" }: {

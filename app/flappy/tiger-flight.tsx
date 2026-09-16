@@ -1,6 +1,6 @@
 "use client";
 
-import { ScreenButton, ScreenLayer, ScreenPanel } from "../screen-ui";
+import { GameStartScreen, ScreenButton, ScreenLayer, ScreenPanel } from "../screen-ui";
 
 import MouseKey from "../mouse-key";
 
@@ -291,44 +291,17 @@ export default function TwisWuaFlight() {
         )}
 
         {ready && (
-          <ScreenLayer className={`${styles.overlay} ${styles.readyOverlay}`}>
-            <ScreenPanel className={styles.launchPanel}>
-              <span className={styles.eyebrow}>
-                SMALL TIGER. WILD BLUE YONDER.
-              </span>
-              <h1>
-                Born to <em>fly.</em>
-              </h1>
-              <p>
-                A little courage. A well-timed flap.
-                <br />
-                There’s a whole jungle up here.
-              </p>
-              <ScreenButton
-                className={styles.primary}
-                onClick={() => {
-                  action();
-                  canvasRef.current?.focus({ preventScroll: true });
-                }}
-              >
-                LET’S FLY <span aria-hidden="true">↗</span>
-              </ScreenButton>
-              <span className={styles.startHint}>
-                TAP OR PRESS SPACE TO FLAP
-              </span>
-              <div className={styles.briefing}>
-                <span>
-                  <b>✦</b> Collect stars
-                </span>
-                <span>
-                  <b>◇</b> One free shield
-                </span>
-                <span>
-                  <b>↑</b> Find your rhythm
-                </span>
-              </div>
-            </ScreenPanel>
-          </ScreenLayer>
+          <GameStartScreen
+            eyebrow="SMALL TIGER. WILD BLUE YONDER."
+            title={<>Born to <em>fly.</em></>}
+            description="A little courage. A well-timed flap. Collect stars and find your rhythm."
+            actionLabel="LET’S FLY"
+            onStart={() => {
+              action();
+              canvasRef.current?.focus({ preventScroll: true });
+            }}
+            hint="Tap or press Space to flap · Start with one shield"
+          />
         )}
         {hud.phase === "paused" && (
           <ScreenLayer className={`${styles.overlay} ${styles.scrim}`}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ScreenButton, ScreenLayer, ScreenPanel } from "../screen-ui";
+import { GameStartScreen, ScreenButton, ScreenLayer, ScreenPanel } from "../screen-ui";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -270,24 +270,29 @@ export default function Dash() {
             <strong>{String(best).padStart(5, "0")}</strong>
           </div>
         </div>
-        {hud.phase !== "playing" && (
-          <ScreenLayer
-            className={`${styles.overlay} ${hud.phase === "ready" ? styles.welcome : styles.scrim}`}
-          >
+        {hud.phase === "ready" && (
+          <GameStartScreen
+            eyebrow="SMALL PAWS. NO BRAKES."
+            title={<>Born to <em>run.</em></>}
+            description="Leap over cacti. Duck under the flock. See how far your paws can take you."
+            actionLabel="HIT THE TRAIL"
+            onStart={() => {
+              action();
+              canvasRef.current?.focus({ preventScroll: true });
+            }}
+            hint="Space to jump · S to crouch · On mobile: A / B"
+          />
+        )}
+        {(hud.phase === "paused" || hud.phase === "over") && (
+          <ScreenLayer className={`${styles.overlay} ${styles.scrim}`}>
             <ScreenPanel className={styles.panel}>
               <span className={styles.eyebrow}>
-                {hud.phase === "ready"
-                  ? "SMALL PAWS. NO BRAKES."
-                  : hud.phase === "paused"
-                    ? "A LITTLE BREATHING ROOM"
-                    : "THE TRAIL ALWAYS CALLS BACK"}
+                {hud.phase === "paused"
+                  ? "A LITTLE BREATHING ROOM"
+                  : "THE TRAIL ALWAYS CALLS BACK"}
               </span>
               <h1>
-                {hud.phase === "ready" ? (
-                  <>
-                    Born to <em>run.</em>
-                  </>
-                ) : hud.phase === "paused" ? (
+                {hud.phase === "paused" ? (
                   <>
                     Taking a <em>paws.</em>
                   </>
@@ -300,11 +305,9 @@ export default function Dash() {
                 )}
               </h1>
               <p>
-                {hud.phase === "ready"
-                  ? "Leap over cacti. Duck under the flock. See how far your paws can take you."
-                  : hud.phase === "paused"
-                    ? "Your trail will be right here."
-                    : "One little stumble. Plenty of trail left."}
+                {hud.phase === "paused"
+                  ? "Your trail will be right here."
+                  : "One little stumble. Plenty of trail left."}
               </p>
               {hud.phase === "over" && (
                 <div className={styles.results}>
@@ -330,19 +333,15 @@ export default function Dash() {
                   canvasRef.current?.focus({ preventScroll: true });
                 }}
               >
-                {hud.phase === "ready"
-                  ? "HIT THE TRAIL"
-                  : hud.phase === "paused"
-                    ? "KEEP RUNNING"
-                    : "ONE MORE RUN"}
+                {hud.phase === "paused"
+                  ? "KEEP RUNNING"
+                  : "ONE MORE RUN"}
                 <span aria-hidden="true">↗</span>
               </ScreenButton>
               <small>
-                {hud.phase === "ready"
-                  ? "SPACEBAR TO JUMP · HOLD S TO CROUCH"
-                  : hud.phase === "paused"
-                    ? "P TO RESUME"
-                    : "A NEW RUN. A NEW PERSONAL BEST?"}
+                {hud.phase === "paused"
+                  ? "P TO RESUME"
+                  : "A NEW RUN. A NEW PERSONAL BEST?"}
               </small>
             </ScreenPanel>
           </ScreenLayer>
