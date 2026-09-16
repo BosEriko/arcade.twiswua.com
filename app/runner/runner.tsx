@@ -1,5 +1,7 @@
 "use client";
 
+import { ScreenButton, ScreenLayer, ScreenPanel } from "../screen-ui";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createRunner,
@@ -269,10 +271,10 @@ export default function Dash() {
           </div>
         </div>
         {hud.phase !== "playing" && (
-          <div
+          <ScreenLayer
             className={`${styles.overlay} ${hud.phase === "ready" ? styles.welcome : styles.scrim}`}
           >
-            <div className={styles.panel}>
+            <ScreenPanel className={styles.panel}>
               <span className={styles.eyebrow}>
                 {hud.phase === "ready"
                   ? "SMALL PAWS. NO BRAKES."
@@ -320,7 +322,7 @@ export default function Dash() {
                   </div>
                 </div>
               )}
-              <button
+              <ScreenButton
                 className={styles.primary}
                 onClick={(event) => {
                   action();
@@ -334,7 +336,7 @@ export default function Dash() {
                     ? "KEEP RUNNING"
                     : "ONE MORE RUN"}
                 <span aria-hidden="true">↗</span>
-              </button>
+              </ScreenButton>
               <small>
                 {hud.phase === "ready"
                   ? "SPACEBAR TO JUMP · HOLD S TO CROUCH"
@@ -342,8 +344,8 @@ export default function Dash() {
                     ? "P TO RESUME"
                     : "A NEW RUN. A NEW PERSONAL BEST?"}
               </small>
-            </div>
-          </div>
+            </ScreenPanel>
+          </ScreenLayer>
         )}
       </section>
       {storageUnavailable && (

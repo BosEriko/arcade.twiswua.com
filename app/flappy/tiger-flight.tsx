@@ -1,5 +1,7 @@
 "use client";
 
+import { ScreenButton, ScreenLayer, ScreenPanel } from "../screen-ui";
+
 import MouseKey from "../mouse-key";
 
 import Link from "next/link";
@@ -289,8 +291,8 @@ export default function TwisWuaFlight() {
         )}
 
         {ready && (
-          <div className={`${styles.overlay} ${styles.readyOverlay}`}>
-            <div className={styles.launchPanel}>
+          <ScreenLayer className={`${styles.overlay} ${styles.readyOverlay}`}>
+            <ScreenPanel className={styles.launchPanel}>
               <span className={styles.eyebrow}>
                 SMALL TIGER. WILD BLUE YONDER.
               </span>
@@ -302,7 +304,7 @@ export default function TwisWuaFlight() {
                 <br />
                 There’s a whole jungle up here.
               </p>
-              <button
+              <ScreenButton
                 className={styles.primary}
                 onClick={() => {
                   action();
@@ -310,7 +312,7 @@ export default function TwisWuaFlight() {
                 }}
               >
                 LET’S FLY <span aria-hidden="true">↗</span>
-              </button>
+              </ScreenButton>
               <span className={styles.startHint}>
                 TAP OR PRESS SPACE TO FLAP
               </span>
@@ -325,18 +327,18 @@ export default function TwisWuaFlight() {
                   <b>↑</b> Find your rhythm
                 </span>
               </div>
-            </div>
-          </div>
+            </ScreenPanel>
+          </ScreenLayer>
         )}
         {hud.phase === "paused" && (
-          <div className={`${styles.overlay} ${styles.scrim}`}>
-            <div className={styles.resultPanel}>
+          <ScreenLayer className={`${styles.overlay} ${styles.scrim}`}>
+            <ScreenPanel className={styles.resultPanel}>
               <span className={styles.eyebrow}>A LITTLE BREATHING ROOM</span>
               <h2>
                 On cloud <em>pause.</em>
               </h2>
               <p>Your flight is safe. Ready when you are.</p>
-              <button
+              <ScreenButton
                 className={styles.primary}
                 onClick={() => {
                   action();
@@ -344,14 +346,14 @@ export default function TwisWuaFlight() {
                 }}
               >
                 KEEP FLYING <span aria-hidden="true">↗</span>
-              </button>
+              </ScreenButton>
               <span className={styles.startHint}>P OR ESC TO RESUME</span>
-            </div>
-          </div>
+            </ScreenPanel>
+          </ScreenLayer>
         )}
         {over && (
-          <div className={`${styles.overlay} ${styles.scrim}`}>
-            <div className={styles.resultPanel}>
+          <ScreenLayer className={`${styles.overlay} ${styles.scrim}`}>
+            <ScreenPanel className={styles.resultPanel}>
               <span className={styles.eyebrow}>
                 {isRecord
                   ? "A NEW PERSONAL BEST!"
@@ -395,7 +397,7 @@ export default function TwisWuaFlight() {
                 {hud.gates} gates cleared · {hud.distance} m flown
                 {hud.bestCombo > 1 ? ` · ×${hud.bestCombo} best streak` : ""}
               </p>
-              <button
+              <ScreenButton
                 className={styles.primary}
                 onClick={() => {
                   action();
@@ -403,12 +405,12 @@ export default function TwisWuaFlight() {
                 }}
               >
                 ONE MORE FLIGHT <span aria-hidden="true">↻</span>
-              </button>
+              </ScreenButton>
               <Link href="/" className={styles.returnLink}>
                 Back to the arcade
               </Link>
-            </div>
-          </div>
+            </ScreenPanel>
+          </ScreenLayer>
         )}
         <div className={styles.screenLabel} aria-hidden="true">
           <span>TW / FLIGHT</span>

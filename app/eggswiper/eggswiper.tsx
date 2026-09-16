@@ -1,5 +1,7 @@
 "use client";
 
+import { ScreenButton, ScreenPanel } from "../screen-ui";
+
 import { useEffect, useRef, useState } from "react";
 import GameShell from "../game-shell";
 import MouseKey from "../mouse-key";
@@ -134,10 +136,10 @@ export default function Eggswiper() {
         </div>
         <div className={styles.boardArea}>
           {nest.phase === "paused" ? (
-            <div className={styles.paused}>
+            <ScreenPanel className={styles.paused}>
               <h2>Nest nap.</h2>
-              <button onClick={pause}>Resume</button>
-            </div>
+              <ScreenButton onClick={pause}>Resume</ScreenButton>
+            </ScreenPanel>
           ) : (
             <div className={styles.board} role="group" aria-label="8 by 8 egg field">
               {nest.eggs.map((egg, index) => {

@@ -56,6 +56,7 @@ export default function GameShell({
   overlays,
 }: Props) {
   const [scoreScreen, setScoreScreen] = useState<HTMLDivElement | null>(null);
+  const [scoreOpen, setScoreOpen] = useState(false);
   const pathname = usePathname();
   useEffect(() => {
     if (!game) return;
@@ -86,6 +87,7 @@ export default function GameShell({
             <>
               <HighScores
                 container={scoreScreen}
+                onVisibilityChange={setScoreOpen}
                 game={game}
                 result={result}
                 onOpen={() => {
@@ -101,7 +103,7 @@ export default function GameShell({
               </button>
               <button
                 onClick={onPause}
-                disabled={phase !== "playing" && phase !== "paused"}
+                disabled={scoreOpen || (phase !== "playing" && phase !== "paused")}
                 aria-label={phase === "paused" ? "Resume game" : "Pause game"}
               >
                 {phase === "paused" ? "▷" : "Ⅱ"}
@@ -110,7 +112,7 @@ export default function GameShell({
           )}
         </div>
       </header>
-      <div className={styles.cabinetSlot} data-game={game}>
+      <div className={styles.cabinetSlot} data-game={game} data-screen-ui={scoreOpen}>
         <section
           className={styles.cabinet}
           aria-label={game ? `${title} game console` : "Arcade Room console"}
@@ -120,16 +122,16 @@ export default function GameShell({
             <span>{statusRight}</span>
           </div>
           <div
-            className={`${styles.viewport} ${sidebar ? styles.withSidebar : ""}`}
+            className={`${styles.viewport} ${sidebar && !scoreOpen ? styles.withSidebar : ""}`}
           >
             <div ref={setScoreScreen} className={`${styles.screen} ${game ? "" : styles.menuScreen}`}>
               {children}
             </div>
-            {sidebar && <div className={styles.sidebar}>{sidebar}</div>}
+            {sidebar && !scoreOpen && <div className={styles.sidebar}>{sidebar}</div>}
           </div>
         </section>
       </div>
-      <div className={styles.controls}>
+      <div className={styles.controls} inert={scoreOpen}>
         <p className={styles.desktopHint}>{hint}</p>
         {controls}
       </div>

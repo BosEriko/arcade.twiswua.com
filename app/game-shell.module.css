@@ -577,3 +577,8 @@
     --game-sidebar: 0px;
   }
 }
+
+.cabinetSlot[data-game][data-screen-ui="true"] > .cabinet {
+  width: 100%;
+  height: 100%;
+}

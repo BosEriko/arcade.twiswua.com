@@ -1,5 +1,7 @@
 "use client";
 
+import { ScreenButton, ScreenLayer, ScreenPanel } from "./screen-ui";
+
 import {
   useEffect,
   useRef,
@@ -529,8 +531,8 @@ export default function Game({
             phase === "paused" ||
             phase === "over" ||
             phase === "upgrade") && (
-            <div className={`overlay ${phase === "ready" ? "welcome" : ""}`}>
-              <div
+            <ScreenLayer className={`overlay ${phase === "ready" ? "welcome" : ""}`}>
+              <ScreenPanel
                 className={`modal ${phase === "upgrade" ? "upgrade-modal" : ""}`}
               >
                 <div className="eyebrow">
@@ -584,7 +586,7 @@ export default function Game({
                       ))}
                   </div>
                 ) : (
-                  <button
+                  <ScreenButton
                     className="primary-button"
                     onClick={phase === "paused" ? togglePause : start}
                   >
@@ -594,7 +596,7 @@ export default function Game({
                         ? "Back to the wild"
                         : "One more run"}
                     <span>↗</span>
-                  </button>
+                  </ScreenButton>
                 )}
                 {phase === "upgrade" && (
                   <button
@@ -632,8 +634,8 @@ export default function Game({
                     "A fresh flock is on its way."
                   )}
                 </small>
-              </div>
-            </div>
+              </ScreenPanel>
+            </ScreenLayer>
           )}
         </div>
         <div className="mobile-hud">

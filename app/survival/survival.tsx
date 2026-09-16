@@ -12,6 +12,7 @@ import HighScores from "../high-scores";
 export default function Survival() {
   const online = useRoom();
   const [lobby, setLobby] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
   const [scoreScreen, setScoreScreen] = useState<HTMLElement | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -173,6 +174,7 @@ export default function Survival() {
         </a>
         <div className={styles.actions}>
           <HighScores
+            onVisibilityChange={setScoreOpen}
             container={scoreScreen}
             game="survival"
             result={
@@ -413,7 +415,7 @@ export default function Survival() {
                 : "Mouse / WASD · J dash · K roar · Co-op does not pause"}
             </span>
           </div>
-          <div className={styles.controls}>
+          <div className={styles.controls} inert={scoreOpen}>
             <HandheldControls
               phase={playing ? "playing" : "ready"}
               dashCooldown={player?.dashCooldown || 0}

@@ -19,6 +19,13 @@ import {
   signInForScores,
   signOutOfScores,
 } from "../lib/leaderboard-store";
+import {
+  ScreenActions,
+  ScreenButton,
+  ScreenContent,
+  ScreenHeader,
+  ScreenView,
+} from "./screen-ui";
 import styles from "./high-scores.module.css";
 
 export default function HighScores({
@@ -26,15 +33,15 @@ export default function HighScores({
   container,
   result = null,
   onOpen,
+  onVisibilityChange,
 }: {
   game: ArcadeGame;
   container: HTMLElement | null;
   result?: ArcadeResult | null;
   onOpen?: () => void;
+  onVisibilityChange?: (open: boolean) => void;
 }) {
   const titleId = useId();
-  const dialog = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
   const request = useRef(0);
   const submitting = useRef(false);
   const [open, setOpen] = useState(false);
@@ -61,36 +68,9 @@ export default function HighScores({
   }, []);
 
   useEffect(() => {
-    const panel = dialog.current;
-    if (!open || !container || !panel) return;
-    const previousFocus = document.activeElement as HTMLElement | null;
-    const background: Array<{ element: HTMLElement; inert: boolean }> = [];
-    panel.focus({ preventScroll: true });
-    let current: HTMLElement = panel.parentElement!;
-    while (current.parentElement) {
-      for (const sibling of current.parentElement.children) {
-        if (sibling !== current && sibling instanceof HTMLElement) {
-          background.push({ element: sibling, inert: sibling.inert });
-          sibling.inert = true;
-        }
-      }
-      current = current.parentElement;
-      if (current === document.body) break;
-    }
-    const containFocus = (event: FocusEvent) => {
-      if (event.target instanceof Node && !panel.contains(event.target)) {
-        panel.focus({ preventScroll: true });
-      }
-    };
-    document.addEventListener("focusin", containFocus);
-    return () => {
-      document.removeEventListener("focusin", containFocus);
-      background.forEach(({ element, inert }) => { element.inert = inert; });
-      if (previousFocus?.isConnected && previousFocus !== document.body) {
-        previousFocus.focus({ preventScroll: true });
-      } else trigger.current?.focus({ preventScroll: true });
-    };
-  }, [open, container]);
+    onVisibilityChange?.(open);
+    return () => onVisibilityChange?.(false);
+  }, [open, onVisibilityChange]);
 
   useEffect(() => {
     const id = ++request.current;
@@ -187,8 +167,7 @@ export default function HighScores({
     qualifies(result.score, entries);
   return (
     <>
-      <button
-        ref={trigger}
+      <ScreenButton
         className={styles.trigger}
         aria-label={`${metadata.name} high scores`}
         title="High scores"
@@ -202,237 +181,189 @@ export default function HighScores({
       >
         <span aria-hidden="true">♛</span>
         <span>TOP 10</span>
-      </button>
+      </ScreenButton>
       {open && container &&
         createPortal(
-          <div className={styles.overlay}>
-          <div
-            ref={dialog}
-            className={styles.dialog}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            tabIndex={-1}
-            onKeyDown={(event) => {
-              event.stopPropagation();
-              if (event.key === "Escape") {
-                event.preventDefault();
-                close();
-              }
-              if (event.key === "Tab") {
-                const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
-                  'button:not(:disabled), input:not(:disabled), a[href], [tabindex="0"]',
-                )).filter((element) => element.getClientRects().length > 0);
-                const first = focusable[0];
-                const last = focusable.at(-1);
-                if (!first || !last) {
-                  event.preventDefault();
-                  event.currentTarget.focus();
-                } else if (event.shiftKey && (document.activeElement === first || document.activeElement === event.currentTarget)) {
-                  event.preventDefault();
-                  last.focus();
-                } else if (!event.shiftKey && document.activeElement === last) {
-                  event.preventDefault();
-                  first.focus();
-                }
-              }
-            }}
-            onKeyUp={(event) => event.stopPropagation()}
-          >
-            <header className={styles.header}>
-              <div>
-                <span>
-                  TWISWUA&apos;S ARCADE / {metadata.name.toUpperCase()}
-                </span>
-                <h2 id={titleId}>
-                  {mode === "entry" ? "Leave your mark." : "The high rollers."}
-                </h2>
-              </div>
-              <button
-                className={styles.close}
-                onClick={close}
-                disabled={saving}
-                aria-label="Close high scores"
-              >
-                ×
-              </button>
-            </header>
-            <div className={styles.account}>
-              <span>
-                {account
-                  ? `ACCOUNT · ${account}`
-                  : "GUEST ACCOUNT · PLAY WITHOUT SIGNING IN"}
-              </span>
-              <button
-                className={styles.textButton}
-                disabled={saving || authBusy}
-                onClick={async () => {
-                  setAuthBusy(true);
-                  setError("");
-                  try {
-                    if (account) await signOutOfScores();
-                    else await signInForScores();
-                  } catch (reason) {
-                    setError(leaderboardError(reason));
-                  } finally {
-                    setAuthBusy(false);
-                  }
-                }}
-              >
-                {authBusy ? "Connecting…" : account ? "Sign out" : "Sign in"}
-              </button>
-            </div>
-            {mode === "entry" && result ? (
-              <form
-                className={styles.entry}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void submit();
-                }}
-              >
-                <p className={styles.qualifier}>
-                  A TOP-10 RUN. THREE LETTERS. YOUR LEGACY.
-                </p>
-                <div className={styles.newScore}>
-                  <strong>{result.score.toLocaleString("en-US")}</strong>
-                  <span>{metadata.unit}</span>
-                </div>
-                <fieldset
-                  className={styles.letters}
-                  disabled={saving || authBusy}
-                >
-                  <legend>CHOOSE YOUR INITIALS</legend>
-                  {[0, 1, 2].map((index) => (
-                    <div className={styles.letter} key={index}>
-                      <button
-                        type="button"
-                        onClick={() => change(index, 1)}
-                        aria-label={`Next letter ${index + 1}`}
-                      >
-                        <span aria-hidden="true">▲</span>
-                      </button>
-                      <output
-                        aria-label={`Letter ${index + 1}`}
-                        aria-live="polite"
-                      >
-                        {initials[index]}
-                      </output>
-                      <button
-                        type="button"
-                        onClick={() => change(index, -1)}
-                        aria-label={`Previous letter ${index + 1}`}
-                      >
-                        <span aria-hidden="true">▼</span>
-                      </button>
-                    </div>
-                  ))}
-                </fieldset>
-                {error && (
-                  <p className={styles.error} role="alert">
-                    {error}
-                  </p>
-                )}
-                <button
-                  className={styles.primary}
-                  type="submit"
-                  disabled={saving || authBusy}
-                >
-                  {saving ? "SAVING YOUR SPOT…" : "SAVE HIGH SCORE"}
-                  <span aria-hidden="true">↗</span>
-                </button>
-                <button
+          <ScreenView container={container} titleId={titleId} onClose={close}>
+            <ScreenHeader
+              id={titleId}
+              eyebrow={metadata.name.toUpperCase()}
+              title={mode === "entry" ? "Leave your mark." : "The high rollers."}
+              onClose={close}
+              closeDisabled={saving}
+              closeLabel="Close high scores"
+            />
+            <ScreenContent>
+              {mode === "board" && <div className={styles.account}>
+                <span>{account || "Playing as guest"}</span>
+                <ScreenButton
                   className={styles.textButton}
-                  type="button"
-                  disabled={saving}
-                  onClick={() => {
-                    setMode("board");
-                    void refresh();
+                  disabled={saving || authBusy}
+                  onClick={async () => {
+                    setAuthBusy(true);
+                    setError("");
+                    try {
+                      if (account) await signOutOfScores();
+                      else await signInForScores();
+                    } catch (reason) {
+                      setError(leaderboardError(reason));
+                    } finally {
+                      setAuthBusy(false);
+                    }
                   }}
                 >
-                  View the board first
-                </button>
-              </form>
-            ) : (
-              <div className={styles.board}>
-                <div className={styles.subheading}>
-                  <span>TOP 10 · {metadata.unit}</span>
-                  <span>{metadata.note}</span>
-                </div>
-                {message && (
-                  <p className={styles.message} role="status">
-                    {message}
-                  </p>
-                )}
-                {loading ? (
-                  <p className={styles.state} role="status">
-                    Warming up the scoreboard…
-                  </p>
-                ) : error ? (
-                  <div className={styles.state}>
-                    <p role="alert">{error}</p>
-                    <button
-                      className={styles.primary}
-                      onClick={() => void refresh()}
-                    >
-                      TRY AGAIN <span>↗</span>
-                    </button>
+                  {authBusy ? "Connecting…" : account ? "Sign out" : "Sign in"}
+                </ScreenButton>
+              </div>}
+              {mode === "entry" && result ? (
+                <form
+                  id={`${titleId}-entry`}
+                  className={styles.entry}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void submit();
+                  }}
+                >
+                  <div className={styles.newScore}>
+                    <strong>{result.score.toLocaleString("en-US")}</strong>
+                    <span>{metadata.unit}</span>
                   </div>
-                ) : (
-                  <>
-                    <ol
-                      className={styles.list}
-                      aria-label={`${metadata.name} top 10`}
-                    >
-                      {Array.from({ length: 10 }, (_, index) => {
-                        const row = entries[index];
-                        return (
-                          <li
-                            key={row?.id || index}
-                            className={
-                              row?.id === submitted
-                                ? styles.yourScore
-                                : undefined
-                            }
-                          >
-                            <span className={styles.rank}>
-                              {String(index + 1).padStart(2, "0")}
-                            </span>
-                            <strong>{row?.initials || "---"}</strong>
-                            <span className={styles.score}>
-                              {row ? row.score.toLocaleString("en-US") : "—"}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                    {!entries.length && (
-                      <p className={styles.empty}>
-                        A fresh machine. Be the first to leave your initials.
-                      </p>
-                    )}
-                    {canEnter && (
-                      <button
+                  <fieldset
+                    className={styles.letters}
+                    disabled={saving || authBusy}
+                  >
+                    <legend>CHOOSE YOUR INITIALS</legend>
+                    {[0, 1, 2].map((index) => (
+                      <div className={styles.letter} key={index}>
+                        <ScreenButton
+                          type="button"
+                          onClick={() => change(index, 1)}
+                          aria-label={`Next letter ${index + 1}`}
+                        >
+                          <span aria-hidden="true">▲</span>
+                        </ScreenButton>
+                        <output
+                          aria-label={`Letter ${index + 1}`}
+                          aria-live="polite"
+                        >
+                          {initials[index]}
+                        </output>
+                        <ScreenButton
+                          type="button"
+                          onClick={() => change(index, -1)}
+                          aria-label={`Previous letter ${index + 1}`}
+                        >
+                          <span aria-hidden="true">▼</span>
+                        </ScreenButton>
+                      </div>
+                    ))}
+                  </fieldset>
+                  {error && (
+                    <p className={styles.error} role="alert">
+                      {error}
+                    </p>
+                  )}
+                </form>
+              ) : (
+                <div>
+                  <div className={styles.subheading}>
+                    <span>TOP 10 · {metadata.unit}</span>
+                    <span>{metadata.note}</span>
+                  </div>
+                  {message && (
+                    <p className={styles.message} role="status">
+                      {message}
+                    </p>
+                  )}
+                  {loading ? (
+                    <p className={styles.state} role="status">
+                      Warming up the scoreboard…
+                    </p>
+                  ) : error ? (
+                    <div className={styles.state}>
+                      <p role="alert">{error}</p>
+                      <ScreenButton
                         className={styles.primary}
-                        onClick={() => {
-                          setError("");
-                          setMode("entry");
-                        }}
+                        onClick={() => void refresh()}
                       >
-                        ENTER YOUR INITIALS <span aria-hidden="true">↗</span>
-                      </button>
-                    )}
-                  </>
-                )}
-                <div className={styles.footer}>
-                  <span>THREE LETTERS. TEN LEGENDS.</span>
-                  <button className={styles.textButton} onClick={close}>
-                    Back to the game
-                  </button>
+                        TRY AGAIN <span>↗</span>
+                      </ScreenButton>
+                    </div>
+                  ) : (
+                    <>
+                      <ol
+                        className={styles.list}
+                        aria-label={`${metadata.name} top 10`}
+                      >
+                        {Array.from({ length: 10 }, (_, index) => {
+                          const row = entries[index];
+                          return (
+                            <li
+                              key={row?.id || index}
+                              className={
+                                row?.id === submitted
+                                  ? styles.yourScore
+                                  : undefined
+                              }
+                            >
+                              <span className={styles.rank}>
+                                {String(index + 1).padStart(2, "0")}
+                              </span>
+                              <strong>{row?.initials || "---"}</strong>
+                              <span className={styles.score}>
+                                {row ? row.score.toLocaleString("en-US") : "—"}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                      {!entries.length && (
+                        <p className={styles.empty}>
+                          A fresh machine. Be the first to leave your initials.
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
-          </div>,
+              )}
+            </ScreenContent>
+            <ScreenActions>
+              {mode === "entry" ? (
+                <>
+                  <ScreenButton
+                    className={styles.textButton}
+                    disabled={saving}
+                    onClick={() => { setMode("board"); void refresh(); }}
+                  >
+                    View board
+                  </ScreenButton>
+                  <ScreenButton
+                    className={styles.primary}
+                    type="submit"
+                    form={`${titleId}-entry`}
+                    disabled={saving || authBusy}
+                  >
+                    {saving ? "Saving…" : "Save high score"}
+                    <span aria-hidden="true">↗</span>
+                  </ScreenButton>
+                </>
+              ) : (
+                <>
+                  <ScreenButton className={styles.textButton} onClick={close}>
+                    Back to game
+                  </ScreenButton>
+                  {canEnter && !loading && !error && (
+                    <ScreenButton
+                      className={styles.primary}
+                      onClick={() => { setError(""); setMode("entry"); }}
+                    >
+                      Enter initials <span aria-hidden="true">↗</span>
+                    </ScreenButton>
+                  )}
+                </>
+              )}
+            </ScreenActions>
+          </ScreenView>,
           container,
         )}
     </>
