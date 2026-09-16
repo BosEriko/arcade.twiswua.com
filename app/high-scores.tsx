@@ -61,10 +61,10 @@ export default function HighScores({
     try {
       const saved = localStorage.getItem("arcade-initials");
       if (saved && validInitials(saved)) setInitials(saved);
-    } catch {}
+    } catch { }
     try {
       return observeScoreAccount(setAccount);
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function HighScores({
       );
       try {
         localStorage.setItem("arcade-initials", initials);
-      } catch {}
+      } catch { }
       await refresh();
     } catch (reason) {
       setError(leaderboardError(reason));
@@ -180,7 +180,6 @@ export default function HighScores({
         }}
       >
         <span aria-hidden="true">♛</span>
-        <span>TOP 10</span>
       </ScreenButton>
       {open && container &&
         createPortal(
